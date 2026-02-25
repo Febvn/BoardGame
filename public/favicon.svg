@@ -1,0 +1,28 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <filter id="p-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <linearGradient id="g-red" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF5A5A" />
+            <stop offset="100%" stop-color="#E60000" />
+        </linearGradient>
+        <linearGradient id="g-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00EAFF" />
+            <stop offset="100%" stop-color="#0095FF" />
+        </linearGradient>
+        <linearGradient id="g-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F5F5F7" />
+            <stop offset="100%" stop-color="#A1A1AA" />
+        </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#g-silver)" />
+    <rect x="26" y="2" width="20" height="20" rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+    <rect x="2" y="26" width="20" height="20" rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+    <rect x="26" y="26" width="20" height="20" rx="6" fill="url(#g-silver)" />
+    <path d="M31 7L41 17M41 7L31 17" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round" />
+    <circle cx="12" cy="36" r="5" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" fill="none" />
+    <circle cx="12" cy="12" r="5" fill="url(#g-red)" filter="url(#p-glow)" />
+    <circle cx="36" cy="36" r="5" fill="url(#g-blue)" filter="url(#p-glow)" />
+</svg>

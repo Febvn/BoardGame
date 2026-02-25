@@ -10,12 +10,174 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 </head>
 
 <body>
-    <div id="app">
+    <!-- ═══════════════════════ LANDING PAGE ═══════════════════════ -->
+    <div id="landing-page">
+        <div class="landing-bg">
+            <div class="bg-orb orb-1"></div>
+            <div class="bg-orb orb-2"></div>
+            <div class="bg-orb orb-3"></div>
+            <div class="bg-grid"></div>
+        </div>
+
+        <div class="landing-content">
+            <div class="landing-logo">
+                <h1 class="landing-title">Board<span>Game</span></h1>
+                <p class="landing-subtitle">Premium 3D Board Game Collection</p>
+            </div>
+
+            <div class="landing-menu">
+                <h2 class="menu-heading">Select a Game</h2>
+                <div class="game-grid" id="game-grid">
+                    <button class="game-card" data-game="tictactoe">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="3" y1="15" x2="21" y2="15"></line>
+                                <line x1="9" y1="3" x2="9" y2="21"></line>
+                                <line x1="15" y1="3" x2="15" y2="21"></line>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Tic Tac Toe</span>
+                            <span class="card-desc">Connect 3 in a row</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="checkers">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="8" cy="8" r="6"></circle>
+                                <circle cx="16" cy="16" r="6" opacity="0.6"></circle>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Checkers</span>
+                            <span class="card-desc">Jump & capture pieces</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="chess">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <path d="M12 11V3"></path>
+                                <path d="m7 4 5-1 5 1"></path>
+                                <circle cx="12" cy="11" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Chess</span>
+                            <span class="card-desc">Classic strategy game</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="ludo">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                                <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+                                <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                                <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Ludo</span>
+                            <span class="card-desc">Roll dice & race home</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="monopoly">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Monopoly</span>
+                            <span class="card-desc">Buy & trade properties</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="backgammon">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 3l6 18h6L21 3H3z"></path>
+                                <line x1="12" y1="3" x2="12" y2="21"></line>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Backgammon</span>
+                            <span class="card-desc">Bear off all checkers</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="mill">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="1"></rect>
+                                <rect x="8" y="8" width="8" height="8" rx="1"></rect>
+                                <line x1="12" y1="3" x2="12" y2="8"></line>
+                                <line x1="12" y1="16" x2="12" y2="21"></line>
+                                <line x1="3" y1="12" x2="8" y2="12"></line>
+                                <line x1="16" y1="12" x2="21" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Nine Men's Morris</span>
+                            <span class="card-desc">Form mills to win</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="cards">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="6" width="12" height="16" rx="2" transform="rotate(-10 3 6)"></rect>
+                                <rect x="9" y="4" width="12" height="16" rx="2" transform="rotate(5 9 4)"></rect>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Cards</span>
+                            <span class="card-desc">Card showcase</span>
+                        </div>
+                    </button>
+                    <button class="game-card" data-game="dominoes">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="6" y="3" width="12" height="18" rx="2"></rect>
+                                <line x1="6" y1="12" x2="18" y2="12"></line>
+                                <circle cx="12" cy="7.5" r="1" fill="currentColor"></circle>
+                                <circle cx="9.5" cy="16.5" r="1" fill="currentColor"></circle>
+                                <circle cx="14.5" cy="16.5" r="1" fill="currentColor"></circle>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <span class="card-name">Dominoes</span>
+                            <span class="card-desc">Tile showcase</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="landing-footer">
+                <span class="version-badge">v1.1</span>
+                <span class="footer-text">Built with Three.js | Luxury Edition</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════ GAME VIEW ═══════════════════════ -->
+    <div id="game-view" class="game-view-hidden">
         <!-- Mobile Header -->
         <div class="mobile-header">
             <button id="menu-toggle" class="menu-toggle" aria-label="Toggle menu">
@@ -39,36 +201,83 @@
             <div class="nav-label">Classic Games</div>
             <nav id="game-selector">
                 <button class="game-btn active" data-game="tictactoe">
-                    <span class="btn-icon">⭕</span> Tic Tac Toe
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                        </svg></span> Tic Tac Toe
                 </button>
                 <button class="game-btn" data-game="checkers">
-                    <span class="btn-icon">🏁</span> Checkers
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <circle cx="8" cy="8" r="6"></circle>
+                            <circle cx="16" cy="16" r="6" opacity="0.6"></circle>
+                        </svg></span> Checkers
                 </button>
                 <button class="game-btn" data-game="chess">
-                    <span class="btn-icon">👑</span> Chess
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="11" r="3"></circle>
+                        </svg></span> Chess
                 </button>
                 <button class="game-btn" data-game="ludo">
-                    <span class="btn-icon">🎲</span> Ludo
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+                            <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+                        </svg></span> Ludo
                 </button>
                 <button class="game-btn" data-game="monopoly">
-                    <span class="btn-icon">🏠</span> Monopoly
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        </svg></span> Monopoly
                 </button>
                 <button class="game-btn" data-game="backgammon">
-                    <span class="btn-icon">📐</span> Backgammon
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <path d="M3 3l6 18h6L21 3H3z"></path>
+                        </svg></span> Backgammon
                 </button>
                 <button class="game-btn" data-game="mill">
-                    <span class="btn-icon">🕸️</span> Mill
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <rect x="3" y="3" width="18" height="18" rx="1"></rect>
+                            <rect x="8" y="8" width="8" height="8" rx="1"></rect>
+                        </svg></span> Mill
                 </button>
                 <button class="game-btn" data-game="cards">
-                    <span class="btn-icon">🃏</span> Cards
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <rect x="3" y="6" width="12" height="16" rx="2" transform="rotate(-10 3 6)"></rect>
+                        </svg></span> Cards
                 </button>
                 <button class="game-btn" data-game="dominoes">
-                    <span class="btn-icon">🀄</span> Dominoes
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            width="16" height="16">
+                            <rect x="6" y="3" width="12" height="18" rx="2"></rect>
+                            <line x1="6" y1="12" x2="18" y2="12"></line>
+                        </svg></span> Dominoes
                 </button>
             </nav>
 
+            <div class="sidebar-actions">
+                <button id="back-to-menu" class="btn-back">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
             <div class="sidebar-footer">
-                <span class="version-badge">v1.0</span>
+                <span class="version-badge">v1.1</span>
             </div>
         </aside>
 
@@ -121,6 +330,7 @@
             </div>
         </div>
     </div>
+
     <script type="module" src="/main.js"></script>
 </body>
 

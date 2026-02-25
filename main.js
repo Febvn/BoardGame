@@ -19,6 +19,9 @@ class GameEngine {
         this.sidebar = document.getElementById('sidebar');
         this.sidebarOverlay = document.getElementById('sidebar-overlay');
         this.menuToggle = document.getElementById('menu-toggle');
+        this.landingPage = document.getElementById('landing-page');
+        this.gameView = document.getElementById('game-view');
+        this.backToMenuBtn = document.getElementById('back-to-menu');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -40,9 +43,9 @@ class GameEngine {
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(w, h);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.1;
         this.container.appendChild(this.renderer.domElement);
@@ -56,24 +59,27 @@ class GameEngine {
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const sun = new THREE.DirectionalLight(0xffffff, 1.5);
         sun.position.set(10, 20, 10); sun.castShadow = true;
-        sun.shadow.mapSize.set(2048, 2048);
+        sun.shadow.mapSize.set(1024, 1024);
         sun.shadow.camera.left = sun.shadow.camera.bottom = -10;
         sun.shadow.camera.right = sun.shadow.camera.top = 10;
         this.scene.add(sun);
-        this.scene.add(Object.assign(new THREE.DirectionalLight(0x818cf8, 0.3), { position: new THREE.Vector3(-5, 5, -10) }));
-        const floor = new THREE.Mesh(new THREE.CircleGeometry(25, 64), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.15 }));
+        const fill = new THREE.DirectionalLight(0x818cf8, 0.4);
+        fill.position.set(-5, 5, -10);
+        this.scene.add(fill);
+        const floor = new THREE.Mesh(new THREE.CircleGeometry(25, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.15 }));
         floor.rotation.x = -Math.PI / 2; floor.position.y = -0.51; floor.receiveShadow = true;
         this.scene.add(floor);
-        const grid = new THREE.GridHelper(40, 40, 0x1e293b, 0x1e293b); grid.position.y = -0.5; this.scene.add(grid);
+        const grid = new THREE.GridHelper(40, 20, 0x1e293b, 0x1e293b); grid.position.y = -0.5; this.scene.add(grid);
         window.addEventListener('resize', () => this.onResize());
         this.container.addEventListener('pointerdown', e => this.onClick(e));
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
+        this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
         this.setupMobileMenu();
         this.setupNavigation();
-        await this.loadGame(this.currentGame);
+        this.setupLandingPage();
         this.animate();
-        this.loadingOverlay.classList.add('hidden');
+        this._needsRender = true;
     }
 
     setupMobileMenu() {
@@ -88,12 +94,50 @@ class GameEngine {
         const btns = document.querySelectorAll('.game-btn');
         btns.forEach(btn => btn.addEventListener('click', async () => {
             if (btn.classList.contains('active')) return;
-            btns.forEach(b => b.classList.remove('active')); btn.classList.add('active');
-            this.currentGame = btn.dataset.game;
-            this.gameTitle.innerText = btn.innerText.replace(/[^a-zA-Z ]/g, '').trim();
-            this.sidebar.classList.remove('open'); this.sidebarOverlay.classList.remove('active'); this.menuToggle.classList.remove('active');
-            await this.loadGame(this.currentGame);
+            this.selectGame(btn.dataset.game, btn.innerText);
         }));
+    }
+
+    setupLandingPage() {
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach(card => card.addEventListener('click', () => {
+            const name = card.querySelector('.card-name').innerText;
+            this.selectGame(card.dataset.game, name);
+        }));
+    }
+
+    async selectGame(gt, name) {
+        this.currentGame = gt;
+        this.gameTitle.innerText = name.replace(/[^a-zA-Z ]/g, '').trim();
+
+        // Update sidebar buttons
+        document.querySelectorAll('.game-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.game === gt);
+        });
+
+        // Hide landing page if visible
+        if (!this.landingPage.classList.contains('fade-out')) {
+            this.landingPage.classList.add('fade-out');
+            setTimeout(() => {
+                this.gameView.classList.remove('game-view-hidden');
+                this.gameView.classList.add('game-view-active');
+            }, 300);
+        }
+
+        // Close mobile sidebar
+        this.sidebar.classList.remove('open');
+        this.sidebarOverlay.classList.remove('active');
+        this.menuToggle.classList.remove('active');
+
+        await this.loadGame(gt);
+    }
+
+    showLandingPage() {
+        this.gameView.classList.remove('game-view-active');
+        this.gameView.classList.add('game-view-hidden');
+        setTimeout(() => {
+            this.landingPage.classList.remove('fade-out');
+        }, 300);
     }
 
     setCamera(x, y, z) { const s = this.isMobile ? 1.3 : 1; this.camera.position.set(x * s, y * s, z * s); this.camera.lookAt(0, 0, 0); this.controls.target.set(0, 0, 0); this.controls.update(); }
@@ -121,6 +165,7 @@ class GameEngine {
         this.rollBtn.classList.toggle('hidden', !dg.includes(gt));
         if (!dg.includes(gt)) this.diceResultUI.classList.add('hidden');
         this.loadingBar.style.width = '100%';
+        this._needsRender = true;
         setTimeout(() => this.loadingOverlay.classList.add('hidden'), 300);
     }
 
@@ -155,6 +200,7 @@ class GameEngine {
 
     animateMove(obj, tx, ty, tz, cb) {
         this.animating = true;
+        this._needsRender = true;
         const sx = obj.position.x, sy = obj.position.y, sz = obj.position.z;
         let t = 0;
         const step = () => {
@@ -422,28 +468,67 @@ class GameEngine {
 
     // ═══════════════════════ CARDS ═══════════════════════
     async setup_cards(load) {
-        this.gameStatus.innerText = 'Hearts card collection. Showcase display.';
-        this.models.cardA = await load('Cards/Hearths/card-hearths-white-black-a.gltf');
-        this.models.cardK = await load('Cards/Hearths/card-hearths-white-black-k.gltf');
-        this.models.cardQ = await load('Cards/Hearths/card-hearths-white-black-q.gltf');
-        [this.models.cardA, this.models.cardK, this.models.cardQ].forEach((card, i) => {
-            const c = card.clone(); c.position.set((i - 1) * 2.2, 0, 0); c.rotation.y = (i - 1) * 0.15; c.scale.set(1.5, 1.5, 1.5);
-            c.traverse(ch => { if (ch.isMesh) ch.castShadow = true; }); this.piecesGroup.add(c);
+        this.gameStatus.innerText = 'Hearts - Premium Collection Showcase.';
+        // Load a full high-value hand
+        this.models.c10 = await load('Cards/Hearths/card-hearths-white-black-10.gltf');
+        this.models.cJ = await load('Cards/Hearths/card-hearths-white-black-j.gltf');
+        this.models.cQ = await load('Cards/Hearths/card-hearths-white-black-q.gltf');
+        this.models.cK = await load('Cards/Hearths/card-hearths-white-black-k.gltf');
+        this.models.cA = await load('Cards/Hearths/card-hearths-white-black-a.gltf');
+
+        const cards = ['c10', 'cJ', 'cQ', 'cK', 'cA'];
+        const scale = 2.5;
+
+        cards.forEach((key, i) => {
+            const offset = i - 2;
+            const x = offset * 2.5; // Significantly increased spacing
+            const z = Math.abs(offset) * 0.4;
+            const rotY = -offset * 0.15;
+
+            // Create and place card manually to avoid color override from placePiece
+            const c = this.models[key].clone();
+            c.scale.set(scale, scale, scale);
+            c.position.set(x, 0, z);
+            c.rotation.y = rotY;
+            c.traverse(ch => { if (ch.isMesh) ch.castShadow = true; });
+            this.piecesGroup.add(c);
         });
-        this.gameState = { gameOver: true }; this.setCamera(0, 5, 5); this.updateTurnUI('Viewer', '#94a3b8');
+
+        this.gameState = { gameOver: true };
+        this.setCamera(0, 6, 8);
+        this.updateTurnUI('Collection', '#F5F5F7');
     }
 
-    // ═══════════════════════ DOMINOES ═══════════════════════
     async setup_dominoes(load) {
-        this.gameStatus.innerText = 'Dominoes tile collection. Showcase display.';
-        this.models.dom0 = await load('Dominoes/dominoes-white-black-0-0.gltf');
-        this.models.dom1 = await load('Dominoes/dominoes-white-black-0-1.gltf');
-        this.models.dom2 = await load('Dominoes/dominoes-white-black-0-2.gltf');
-        [this.models.dom0, this.models.dom1, this.models.dom2].forEach((dom, i) => {
-            const d = dom.clone(); d.position.set((i - 1) * 1.8, 0, 0); d.rotation.y = Math.PI / 2; d.scale.set(1.2, 1.2, 1.2);
-            d.traverse(ch => { if (ch.isMesh) ch.castShadow = true; }); this.piecesGroup.add(d);
+        this.gameStatus.innerText = 'Dominoes - Premium Collection.';
+        // Load various tiles
+        this.models.d00 = await load('Dominoes/dominoes-white-black-0-0.gltf');
+        this.models.d01 = await load('Dominoes/dominoes-white-black-0-1.gltf');
+        this.models.d11 = await load('Dominoes/dominoes-white-black-1-1.gltf');
+        this.models.d22 = await load('Dominoes/dominoes-white-black-2-2.gltf');
+        this.models.d33 = await load('Dominoes/dominoes-white-black-3-3.gltf');
+        this.models.d66 = await load('Dominoes/dominoes-white-black-6-6.gltf');
+
+        const scale = 1.0;
+        const spacing = 1.8;
+        const white = 0xF5F5F7;
+
+        const tileList = [
+            { key: 'd00', x: -1, z: -1 },
+            { key: 'd01', x: 1, z: -1 },
+            { key: 'd11', x: -1, z: 1 },
+            { key: 'd22', x: 1, z: 1 },
+            { key: 'd33', x: 0, z: 3 },
+            { key: 'd66', x: 0, z: -3 }
+        ];
+
+        tileList.forEach(t => {
+            this.placePiece(t.key, t.x * spacing, 0, t.z * spacing, white, scale, 0);
         });
-        this.gameState = { gameOver: true }; this.setCamera(0, 4, 5); this.updateTurnUI('Viewer', '#94a3b8');
+
+        this.gameState = { gameOver: true };
+        this.setCamera(0, 10, 10);
+        this.updateTurnUI('Viewer', '#F5F5F7');
     }
 
     // ═══════════════════════ DICE ROLL ═══════════════════════
@@ -520,6 +605,7 @@ class GameEngine {
     // ═══════════════════════ CLICK HANDLER ═══════════════════════
     onClick(e) {
         if (this.gameState.gameOver || this.animating) return;
+        this._needsRender = true;
         const rect = this.renderer.domElement.getBoundingClientRect();
         this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -653,7 +739,7 @@ class GameEngine {
         gs.selected = { r, c };
         gs.validMoves = this.getChessMoves(r, c);
         gs.validMoves.forEach(([mr, mc]) => {
-            const color = gs.board[mr][mc] ? 0xff4444 : 0x00ff88;
+            const color = gs.board[mr][mc] ? 0xFF3131 : 0x00D8FF;
             this.addHighlight(gs.center.x + (mc - 3.5) * gs.cell, gs.topY, gs.center.z + (mr - 3.5) * gs.cell, gs.cell, color);
         });
     }
@@ -696,7 +782,7 @@ class GameEngine {
             if (gs.board[idx]) return;
             const col = gs.currentPlayer;
             const pt = gs.points[idx];
-            const mesh = this.placePiece('man', pt.x, gs.topY, pt.z, col === 'White' ? 0xf8fafc : 0x333333, 0.25);
+            const mesh = this.placePiece('man', pt.x, gs.topY, pt.z, col === 'White' ? 0xF5F5F7 : 0x1A1A1A, 0.25);
             gs.board[idx] = { color: col, mesh };
             gs.piecesLeft[col]--;
             gs.piecesOnBoard[col]++;
@@ -716,7 +802,7 @@ class GameEngine {
             // Check win
             if (gs.piecesOnBoard[opp] + gs.piecesLeft[opp] < 3) {
                 gs.gameOver = true;
-                this.updateTurnUI(`${gs.currentPlayer} WINS!`, gs.currentPlayer === 'White' ? '#f8fafc' : '#64748b');
+                this.updateTurnUI(`${gs.currentPlayer} WINS!`, gs.currentPlayer === 'White' ? '#F5F5F7' : '#FF3131');
                 this.gameStatus.innerText = `${gs.currentPlayer} wins! 🎉`;
                 return;
             }
@@ -732,7 +818,7 @@ class GameEngine {
     advanceMillTurn() {
         const gs = this.gameState;
         gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
-        this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f8fafc' : '#64748b');
+        this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#F5F5F7' : '#FF3131');
         if (gs.piecesLeft.White === 0 && gs.piecesLeft.Black === 0) {
             gs.phase = 'move'; // TODO: implement move phase
             this.gameStatus.innerText = `All pieces placed! Phase: Move pieces along lines.`;
@@ -749,7 +835,13 @@ class GameEngine {
         if (w > 0 && h > 0) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
     }
 
-    animate() { requestAnimationFrame(() => this.animate()); this.controls.update(); this.renderer.render(this.scene, this.camera); }
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        if (this.controls.update() || this.animating || this._needsRender) {
+            this.renderer.render(this.scene, this.camera);
+            this._needsRender = false;
+        }
+    }
 }
 
 new GameEngine();
