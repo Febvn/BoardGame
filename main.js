@@ -78,7 +78,14 @@ class GameEngine {
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
         this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
-        this.authBtns.forEach(btn => btn.addEventListener('click', () => this.showAuthModal()));
+        
+        // Use Global Event Delegation for Sign In buttons (more robust)
+        document.addEventListener('click', e => {
+            if (e.target.closest('.btn-show-auth')) {
+                this.showAuthModal();
+            }
+        });
+
         this.closeAuthModalBtn.addEventListener('click', () => this.hideAuthModal());
         this.authModal.addEventListener('click', e => { if (e.target === this.authModal) this.hideAuthModal(); });
         this.setupMobileMenu();
