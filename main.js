@@ -25,6 +25,7 @@ class GameEngine {
         this.authModal = document.getElementById('auth-modal');
         this.closeAuthModalBtn = document.getElementById('close-auth-modal');
         this.authBtns = document.querySelectorAll('.btn-show-auth');
+        this.navbar = document.querySelector('.top-navbar');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -128,9 +129,10 @@ class GameEngine {
             b.classList.toggle('active', b.dataset.game === gt);
         });
 
-        // Hide landing page if visible
+        // Hide landing page and navbar if visible
         if (!this.landingPage.classList.contains('fade-out')) {
             this.landingPage.classList.add('fade-out');
+            this.navbar.classList.add('fade-out');
             setTimeout(() => {
                 this.gameView.classList.remove('game-view-hidden');
                 this.gameView.classList.add('game-view-active');
@@ -150,6 +152,7 @@ class GameEngine {
         this.gameView.classList.add('game-view-hidden');
         setTimeout(() => {
             this.landingPage.classList.remove('fade-out');
+            this.navbar.classList.remove('fade-out');
         }, 300);
     }
 
