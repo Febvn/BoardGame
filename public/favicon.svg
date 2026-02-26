@@ -1,28 +1,29 @@
-<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <filter id="p-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-        <linearGradient id="g-red" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#FF5A5A" />
-            <stop offset="100%" stop-color="#E60000" />
-        </linearGradient>
-        <linearGradient id="g-blue" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#00EAFF" />
-            <stop offset="100%" stop-color="#0095FF" />
-        </linearGradient>
-        <linearGradient id="g-silver" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#F5F5F7" />
-            <stop offset="100%" stop-color="#A1A1AA" />
-        </linearGradient>
-    </defs>
-    <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#g-silver)" />
-    <rect x="26" y="2" width="20" height="20" rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-    <rect x="2" y="26" width="20" height="20" rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-    <rect x="26" y="26" width="20" height="20" rx="6" fill="url(#g-silver)" />
-    <path d="M31 7L41 17M41 7L31 17" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round" />
-    <circle cx="12" cy="36" r="5" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" fill="none" />
-    <circle cx="12" cy="12" r="5" fill="url(#g-red)" filter="url(#p-glow)" />
-    <circle cx="36" cy="36" r="5" fill="url(#g-blue)" filter="url(#p-glow)" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#020617;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef08a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#eab308;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Board Shape -->
+  <rect x="40" y="40" width="432" height="432" rx="80" fill="url(#boardGrad)" stroke="#334155" stroke-width="8"/>
+  
+  <!-- Subtle Grid Pattern -->
+  <path d="M256 40V472M40 256H472" stroke="#334155" stroke-width="4" stroke-opacity="0.5"/>
+  
+  <!-- 3D Text with Premium Look -->
+  <text x="50%" y="54%" font-family="'Outfit', 'Arial Black', sans-serif" font-weight="900" font-size="220" 
+        fill="url(#goldGrad)" text-anchor="middle" dominant-baseline="middle" 
+        style="filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.5)); letter-spacing: -10px;">
+    3D
+  </text>
+  
+  <!-- Decorative Dots (like dice/pieces) -->
+  <circle cx="120" cy="120" r="25" fill="#facc15" fill-opacity="0.4"/>
+  <circle cx="392" cy="392" r="25" fill="#facc15" fill-opacity="0.4"/>
 </svg>
