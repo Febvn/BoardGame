@@ -70,7 +70,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 2.5rem;
-    z-index: 3000;
+    z-index: 3500;
     background: rgba(2, 2, 2, 0.4);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -769,7 +769,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 50;
+    z-index: 3500;
     align-items: center;
     justify-content: space-between;
     padding: 0 1rem;
