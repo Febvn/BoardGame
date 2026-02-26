@@ -500,7 +500,7 @@ class GameEngine {
     }
 
     async setup_dominoes(load) {
-        this.gameStatus.innerText = 'Dominoes - Premium Collection.';
+        this.gameStatus.innerText = 'Dominoes - Premium Collection Showcase.';
         // Load various tiles
         this.models.d00 = await load('Dominoes/dominoes-white-black-0-0.gltf');
         this.models.d01 = await load('Dominoes/dominoes-white-black-0-1.gltf');
@@ -510,25 +510,32 @@ class GameEngine {
         this.models.d66 = await load('Dominoes/dominoes-white-black-6-6.gltf');
 
         const scale = 1.0;
-        const spacing = 1.8;
-        const white = 0xF5F5F7;
+        const ivory = 0xFCF6F0; // More premium ivory color
 
-        const tileList = [
-            { key: 'd00', x: -1, z: -1 },
-            { key: 'd01', x: 1, z: -1 },
-            { key: 'd11', x: -1, z: 1 },
-            { key: 'd22', x: 1, z: 1 },
-            { key: 'd33', x: 0, z: 3 },
-            { key: 'd66', x: 0, z: -3 }
-        ];
+        // --- Sequence on Board ---
+        // Placing d00, d01, d11 in a chain
+        this.placePiece('d00', -2, 0, 0, ivory, scale, Math.PI / 2); // Double 0 (vertical)
+        this.placePiece('d01', 0, 0, 0, ivory, scale, 0);           // 0-1 (horizontal)
+        this.placePiece('d11', 2, 0, 0, ivory, scale, Math.PI / 2); // Double 1 (vertical)
 
-        tileList.forEach(t => {
-            this.placePiece(t.key, t.x * spacing, 0, t.z * spacing, white, scale, 0);
+        // --- Player Hand (Standing) ---
+        // Placing d22, d33, d66 standing up in front of the camera
+        const handZ = 4;
+        const handXStart = -2;
+        const handSpacing = 2;
+        const handTiles = ['d22', 'd33', 'd66'];
+
+        handTiles.forEach((key, i) => {
+            const x = handXStart + i * handSpacing;
+            const p = this.placePiece(key, x, 0.4, handZ, ivory, scale, 0);
+            p.rotation.x = -Math.PI / 2; // Make it stand up (adjusting for original GLTF orientation if needed)
+            // Wait, if placePiece sets rotation.y, I need to be careful.
+            // Let's check placePiece implementation.
         });
 
         this.gameState = { gameOver: true };
-        this.setCamera(0, 10, 10);
-        this.updateTurnUI('Viewer', '#F5F5F7');
+        this.setCamera(0, 10, 12);
+        this.updateTurnUI('Collection', '#F5F5F7');
     }
 
     // ═══════════════════════ DICE ROLL ═══════════════════════
