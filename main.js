@@ -24,7 +24,7 @@ class GameEngine {
         this.backToMenuBtn = document.getElementById('back-to-menu');
         this.authModal = document.getElementById('auth-modal');
         this.closeAuthModalBtn = document.getElementById('close-auth-modal');
-        this.signInBtn = document.querySelector('.btn-login');
+        this.authBtns = document.querySelectorAll('.btn-show-auth');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -78,7 +78,7 @@ class GameEngine {
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
         this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
-        this.signInBtn.addEventListener('click', () => this.showAuthModal());
+        this.authBtns.forEach(btn => btn.addEventListener('click', () => this.showAuthModal()));
         this.closeAuthModalBtn.addEventListener('click', () => this.hideAuthModal());
         this.authModal.addEventListener('click', e => { if (e.target === this.authModal) this.hideAuthModal(); });
         this.setupMobileMenu();

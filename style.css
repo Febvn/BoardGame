@@ -1321,6 +1321,10 @@ main {
    RESPONSIVE - MOBILE
    =========================== */
 @media (max-width: 768px) {
+    .top-navbar {
+        display: none;
+    }
+
     #game-view {
         flex-direction: column;
     }
