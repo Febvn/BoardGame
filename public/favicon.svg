@@ -1,29 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#020617;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#fef08a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#eab308;stop-opacity:1" />
-    </linearGradient>
+    <!-- Glow Filters for Neon effect -->
+    <filter id="redNeonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="blueNeonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
   
-  <!-- Main Board Shape -->
-  <rect x="40" y="40" width="432" height="432" rx="80" fill="url(#boardGrad)" stroke="#334155" stroke-width="8"/>
+  <!-- Black Background Board -->
+  <rect x="40" y="40" width="432" height="432" rx="80" fill="#000000" stroke="#ffffff" stroke-width="4"/>
   
-  <!-- Subtle Grid Pattern -->
-  <path d="M256 40V472M40 256H472" stroke="#334155" stroke-width="4" stroke-opacity="0.5"/>
+  <!-- Subtle White Grid -->
+  <path d="M256 40V472M40 256H472" stroke="#ffffff" stroke-width="2" stroke-opacity="0.2"/>
   
-  <!-- 3D Text with Premium Look -->
+  <!-- White 3D Text -->
   <text x="50%" y="54%" font-family="'Outfit', 'Arial Black', sans-serif" font-weight="900" font-size="220" 
-        fill="url(#goldGrad)" text-anchor="middle" dominant-baseline="middle" 
-        style="filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.5)); letter-spacing: -10px;">
+        fill="#ffffff" text-anchor="middle" dominant-baseline="middle" 
+        style="letter-spacing: -10px;">
     3D
   </text>
   
-  <!-- Decorative Dots (like dice/pieces) -->
-  <circle cx="120" cy="120" r="25" fill="#facc15" fill-opacity="0.4"/>
-  <circle cx="392" cy="392" r="25" fill="#facc15" fill-opacity="0.4"/>
+  <!-- Neon Red Dot (Top Left) -->
+  <circle cx="120" cy="120" r="30" fill="#ff0044" filter="url(#redNeonGlow)"/>
+  <circle cx="120" cy="120" r="15" fill="#ffffff" fill-opacity="0.8"/>
+  
+  <!-- Neon Blue Dot (Bottom Right) -->
+  <circle cx="392" cy="392" r="30" fill="#00d8ff" filter="url(#blueNeonGlow)"/>
+  <circle cx="392" cy="392" r="15" fill="#ffffff" fill-opacity="0.8"/>
 </svg>
