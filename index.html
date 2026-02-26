@@ -348,6 +348,39 @@
             </div>
         </main>
 
+        <!-- ═══════════════════════ AUTH MODAL ═══════════════════════ -->
+        <div id="auth-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <button class="modal-close" id="close-auth-modal" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="modal-header">
+                    <h2>Log in or sign up</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="user-account-preview">
+                        <div class="user-avatar">D</div>
+                        <span class="user-email">dodithalud01@gmail.com</span>
+                    </div>
+
+                    <div class="auth-separator">
+                        <span>or</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auth-email">Enter your email</label>
+                        <input type="email" id="auth-email" placeholder="name@example.com" spellcheck="false">
+                    </div>
+
+                    <button class="btn-auth-continue">Continue</button>
+                </div>
+            </div>
+        </div>
+
         <div id="loading-overlay">
             <div class="loader-container">
                 <div class="loader-ring"></div>
