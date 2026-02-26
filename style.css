@@ -85,8 +85,7 @@ body {
 }
 
 .nav-brand span {
-    color: var(--accent);
-    filter: drop-shadow(0 0 10px var(--accent-glow));
+    color: var(--text-white);
 }
 
 .nav-right {
