@@ -297,22 +297,15 @@ class GameEngine {
     }
 
     async handleSignUp() {
-        const email = document.getElementById('auth-email').value;
+        // Just move to the username selection step
+        // We will perform the actual sign up at the very end
         const password = document.getElementById('signup-password').value;
+        const confirm = document.getElementById('signup-confirm').value;
 
-        const { error } = await this.supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                emailRedirectTo: window.location.origin
-            }
-        });
+        if (password !== confirm) return alert('Passwords do not match.');
+        if (password.length < 6) return alert('Password too short.');
 
-        if (error) alert('Error: ' + error.message);
-        else {
-            // Instead of closing, go to username selection
-            this.showAuthStep('username');
-        }
+        this.showAuthStep('username');
     }
 
     setupUsernameValidation() {
@@ -340,9 +333,9 @@ class GameEngine {
     generateRandomUsername() {
         const adjectives = ['Cool', 'Super', 'Hyper', 'Crazy', 'Elite', 'Mega', 'Shadow', 'Neon'];
         const nouns = ['Gamer', 'Legend', 'Knight', 'Panda', 'Eagle', 'Phantom', 'Storm', 'Rex'];
-        const randomName = adjectives[Math.floor(Math.random() * adjectives.length)] + 
-                          nouns[Math.floor(Math.random() * nouns.length)] + 
-                          Math.floor(Math.random() * 999);
+        const randomName = adjectives[Math.floor(Math.random() * adjectives.length)] +
+            nouns[Math.floor(Math.random() * nouns.length)] +
+            Math.floor(Math.random() * 999);
         const input = document.getElementById('signup-username');
         input.value = randomName;
         // Trigger validation
@@ -351,15 +344,24 @@ class GameEngine {
     }
 
     async handleUsernameContinue() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('signup-password').value;
         const username = document.getElementById('signup-username').value;
-        // Update user metadata in Supabase
-        const { error } = await this.supabase.auth.updateUser({
-            data: { full_name: username }
+
+        // Perform the ACTUAL Sign Up here with all data gathered
+        const { error } = await this.supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: { full_name: username },
+                emailRedirectTo: window.location.origin
+            }
         });
 
-        if (error) alert('Error: ' + error.message);
-        else {
-            alert('Username set! Welcome to BOARD3D.');
+        if (error) {
+            alert('Error: ' + error.message);
+        } else {
+            alert('Account created! Please check your email to confirm your account (or refresh if the email confirmation is OFF).');
             this.hideAuthModal();
             window.location.reload();
         }
