@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.10">
+    <link rel="stylesheet" href="style.css?v=1.11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.10</span>
+                <span class="version-badge">v1.11</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.10</span>
+                <span class="version-badge">v1.11</span>
             </div>
         </aside>
 
@@ -320,6 +320,18 @@
 
                 <button class="btn-auth-continue disabled" id="btn-signup-continue" disabled>Continue</button>
             </div>
+
+            <!-- New Account View (When Logged In) -->
+            <div class="modal-body hidden" id="auth-account-view">
+                <div class="user-account-preview">
+                    <div class="user-avatar-large" id="account-avatar"></div>
+                    <h2 id="account-name-header">User Name</h2>
+                    <p id="account-email-sub">email@example.com</p>
+                </div>
+                <div class="account-actions">
+                    <button class="btn-auth-continue danger" id="btn-sign-out">Sign Out</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -335,7 +347,7 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js?v=1.10"></script>
+    <script type="module" src="/main.js?v=1.11"></script>
 </body>
 
 </html>

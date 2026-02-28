@@ -110,6 +110,9 @@ class GameEngine {
         const signupBackBtn = document.getElementById('btn-signup-back');
         if (signupBackBtn) signupBackBtn.addEventListener('click', () => this.showAuthStep('initial'));
 
+        const signOutBtn = document.getElementById('btn-sign-out');
+        if (signOutBtn) signOutBtn.addEventListener('click', () => this.handleSignOut());
+
         this.setupAuthEvents();
 
         // Google Login Action
@@ -197,12 +200,21 @@ class GameEngine {
     showAuthStep(step) {
         const initialView = document.getElementById('auth-initial-view');
         const signupView = document.getElementById('auth-signup-view');
+        const accountView = document.getElementById('auth-account-view');
+        const modal = document.getElementById('auth-modal');
+
+        initialView.classList.add('hidden');
+        signupView.classList.add('hidden');
+        accountView.classList.add('hidden');
+        modal.classList.remove('logged-in');
+
         if (step === 'initial') {
             initialView.classList.remove('hidden');
-            signupView.classList.add('hidden');
-        } else {
-            initialView.classList.add('hidden');
+        } else if (step === 'signup') {
             signupView.classList.remove('hidden');
+        } else if (step === 'account') {
+            accountView.classList.remove('hidden');
+            modal.classList.add('logged-in');
         }
     }
 
@@ -212,24 +224,22 @@ class GameEngine {
         if (!email) return alert('Please enter your email.');
 
         try {
-            // Check if user has a profile (simulated user check)
-            // You should have a 'profiles' table with 'email' column
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .select('email')
-                .eq('email', email)
-                .single();
+            const { data, error } = await this.supabase.auth.signInWithOtp({
+                email: email,
+                options: { shouldCreateUser: false }
+            });
 
-            if (data) {
-                // User already exists -> Send Login Link
-                this.handleLogin(email);
-            } else {
+            if (error && error.message.includes('not found')) {
                 // User doesn't exist -> Show Sign Up view
                 document.getElementById('signup-email-display').value = email;
                 this.showAuthStep('signup');
+            } else {
+                // User exists -> Simple login message for OTP or just show signup if we want password always
+                // For now, let's just use signup/signin logic based on provided design
+                document.getElementById('signup-email-display').value = email;
+                this.showAuthStep('signup'); // Defaulting to the password flow we built
             }
         } catch (error) {
-            // Profile not found -> Show Sign Up view
             document.getElementById('signup-email-display').value = email;
             this.showAuthStep('signup');
         }
@@ -337,12 +347,11 @@ class GameEngine {
         const mobileSignInBtn = document.querySelector('.mobile-actions .btn-show-auth');
 
         if (user) {
-            // User is signed in
             const userName = user.user_metadata?.full_name || user.email;
             const firstName = userName.split(' ')[0];
             const avatarUrl = user.user_metadata?.avatar_url;
 
-            // Updated Desktop Sign-in Button with Avatar
+            // Update Desktop
             if (signInBtn) {
                 signInBtn.innerHTML = `
                     <div class="user-profile-btn">
@@ -354,13 +363,27 @@ class GameEngine {
                 `;
             }
 
+            // Update Mobile
             if (mobileSignInBtn) {
                 mobileSignInBtn.innerHTML = `
                     <div class="user-avatar-mini" style="background-image: url('${avatarUrl}')">
                         ${!avatarUrl ? firstName[0].toUpperCase() : ''}
                     </div>`;
             }
-            this.hideAuthModal();
+
+            // Update Modal Account View
+            document.getElementById('account-name-header').innerText = userName;
+            document.getElementById('account-email-sub').innerText = user.email;
+            const largeAvatar = document.getElementById('account-avatar');
+            if (avatarUrl) {
+                largeAvatar.style.backgroundImage = `url('${avatarUrl}')`;
+                largeAvatar.innerText = '';
+            } else {
+                largeAvatar.style.backgroundImage = 'none';
+                largeAvatar.innerText = firstName[0].toUpperCase();
+            }
+
+            this.showAuthStep('account');
         } else {
             // User is signed out
             if (signInBtn) signInBtn.innerHTML = '<span>Sign In</span>';
@@ -371,6 +394,16 @@ class GameEngine {
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>`;
             }
+            this.showAuthStep('initial');
+        }
+    }
+
+    async handleSignOut() {
+        const { error } = await this.supabase.auth.signOut();
+        if (error) alert('Error: ' + error.message);
+        else {
+            this.hideAuthModal();
+            window.location.reload(); // Refresh to clear state
         }
     }
 
