@@ -237,26 +237,10 @@ class GameEngine {
         const email = emailInput.value.trim();
         if (!email) return alert('Please enter your email.');
 
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOtp({
-                email: email,
-                options: { shouldCreateUser: false }
-            });
-
-            if (error && error.message.includes('not found')) {
-                // User doesn't exist -> Show Sign Up view
-                document.getElementById('signup-email-display').value = email;
-                this.showAuthStep('signup');
-            } else {
-                // User exists -> Simple login message for OTP or just show signup if we want password always
-                // For now, let's just use signup/signin logic based on provided design
-                document.getElementById('signup-email-display').value = email;
-                this.showAuthStep('signup'); // Defaulting to the password flow we built
-            }
-        } catch (error) {
-            document.getElementById('signup-email-display').value = email;
-            this.showAuthStep('signup');
-        }
+        // Optimized: Just move to the next step (Signup/Login) directly
+        // This avoids hitting Supabase Auth Rate Limits (429 errors)
+        document.getElementById('signup-email-display').value = email;
+        this.showAuthStep('signup');
     }
 
     setupAuthEvents() {
