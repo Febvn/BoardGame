@@ -263,23 +263,204 @@ body {
     color: var(--text-white);
 }
 
+/* Modal Nav Header (Back/Title) */
+.modal-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-nav-header h3 {
+    font-size: 1rem;
+    color: var(--text-white);
+    font-weight: 700;
+}
+
+.btn-icon-nav {
+    background: none;
+    border: none;
+    color: var(--text-white);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-nav:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-icon-nav svg {
+    width: 20px;
+    height: 20px;
+}
+
+.signup-title-section {
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+.signup-title-section h2 {
+    font-size: 1.8rem;
+    color: var(--text-white);
+    font-weight: 800;
+}
+
 .modal-body.hidden {
     display: none;
 }
 
-.signup-info {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.signup-info h3 {
-    color: var(--text-white);
-    margin-bottom: 0.5rem;
-}
-
-.signup-info p {
+.form-group.disabled input {
+    background: rgba(45, 55, 72, 0.2) !important;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password:hover {
+    color: var(--text-white);
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Password Checklist */
+.password-check-list {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.check-item {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(30, 41, 59, 0.3);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.check-item.valid {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.05);
+}
+
+.check-item.valid .icon {
+    content: '✓';
+}
+
+/* Terms Checkbox */
+.terms-group {
+    margin: 1.5rem 0;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    user-select: none;
+    line-height: 1.5;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    min-width: 18px;
+    height: 18px;
+    background-color: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    position: relative;
+    transition: var(--transition);
+    margin-top: 2px;
+}
+
+.checkbox-container:hover input~.checkmark {
+    border-color: var(--accent);
+}
+
+.checkbox-container input:checked~.checkmark {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked~.checkmark:after {
+    display: block;
+}
+
+.terms-text a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.terms-text a:hover {
+    text-decoration: underline;
+}
+
+.btn-auth-continue.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-link-back {

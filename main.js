@@ -105,8 +105,12 @@ class GameEngine {
         const backToLoginBtn = document.getElementById('btn-back-to-login');
 
         if (initialContinueBtn) initialContinueBtn.addEventListener('click', () => this.handleContinue());
-        if (signupFinishBtn) signupFinishBtn.addEventListener('click', () => this.handleSignUp());
         if (backToLoginBtn) backToLoginBtn.addEventListener('click', () => this.showAuthStep('initial'));
+
+        const signupBackBtn = document.getElementById('btn-signup-back');
+        if (signupBackBtn) signupBackBtn.addEventListener('click', () => this.showAuthStep('initial'));
+
+        this.setupAuthEvents();
 
         // Google Login Action
         const googleLoginBtn = document.querySelector('.btn-google-login');
@@ -221,12 +225,58 @@ class GameEngine {
                 this.handleLogin(email);
             } else {
                 // User doesn't exist -> Show Sign Up view
+                document.getElementById('signup-email-display').value = email;
                 this.showAuthStep('signup');
             }
         } catch (error) {
-            // Profile not found also ends up here if .single() is used
+            // Profile not found -> Show Sign Up view
+            document.getElementById('signup-email-display').value = email;
             this.showAuthStep('signup');
         }
+    }
+
+    setupAuthEvents() {
+        const passwordInput = document.getElementById('signup-password');
+        const confirmInput = document.getElementById('signup-confirm');
+        const termsCheckbox = document.getElementById('signup-terms');
+        const continueBtn = document.getElementById('btn-signup-continue');
+
+        const validate = () => {
+            const pass = passwordInput.value;
+            const conf = confirmInput.value;
+            const checked = termsCheckbox.checked;
+
+            const hasLength = pass.length >= 6;
+            const hasNumber = /\d/.test(pass);
+            const hasLetter = /[a-zA-Z]/.test(pass);
+            const match = pass === conf && pass.length > 0;
+
+            document.getElementById('check-length').classList.toggle('valid', hasLength);
+            document.getElementById('check-number').classList.toggle('valid', hasNumber);
+            document.getElementById('check-letter').classList.toggle('valid', hasLetter);
+
+            const isValid = hasLength && hasNumber && hasLetter && match && checked;
+            continueBtn.disabled = !isValid;
+            continueBtn.classList.toggle('disabled', !isValid);
+        };
+
+        [passwordInput, confirmInput].forEach(el => el.addEventListener('input', validate));
+        termsCheckbox.addEventListener('change', validate);
+
+        // Toggle Password Visibility
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const isPass = input.type === 'password';
+                input.type = isPass ? 'text' : 'password';
+
+                // Optional: Toggle SVG icon if needed
+                btn.classList.toggle('active', !isPass);
+            });
+        });
+
+        if (continueBtn) continueBtn.addEventListener('click', () => this.handleSignUp());
     }
 
     async handleLogin(email) {
@@ -240,20 +290,19 @@ class GameEngine {
 
     async handleSignUp() {
         const email = document.getElementById('auth-email').value;
-        const name = document.getElementById('auth-name').value;
-        if (!name) return alert('Please enter your name.');
+        const password = document.getElementById('signup-password').value;
 
         const { error } = await this.supabase.auth.signUp({
             email: email,
+            password: password,
             options: {
-                data: { full_name: name },
                 emailRedirectTo: window.location.origin
             }
         });
 
         if (error) alert('Error: ' + error.message);
         else {
-            alert('Sign up successful! Check your email to confirm.');
+            alert('Account created! Please check your email to confirm your account.');
             this.hideAuthModal();
         }
     }

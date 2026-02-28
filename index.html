@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.9">
+    <link rel="stylesheet" href="style.css?v=1.10">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.9</span>
+                <span class="version-badge">v1.10</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.9</span>
+                <span class="version-badge">v1.10</span>
             </div>
         </aside>
 
@@ -248,18 +248,77 @@
                 <button class="btn-auth-continue" id="btn-initial-continue">Continue</button>
             </div>
 
-            <!-- New Signup View -->
+            <!-- Updated Signup View -->
             <div class="modal-body hidden" id="auth-signup-view">
-                <div class="signup-info">
-                    <h3>Create account</h3>
-                    <p>It looks like you're new here! Let's get you set up.</p>
+                <header class="modal-nav-header">
+                    <button class="btn-icon-nav" id="btn-signup-back" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3>Sign up</h3>
+                    <div style="width: 40px;"></div> <!-- Spacer -->
+                </header>
+
+                <div class="signup-title-section">
+                    <h2>Create account</h2>
                 </div>
-                <div class="form-group">
-                    <label for="auth-name">Full Name</label>
-                    <input type="text" id="auth-name" placeholder="Enter your name" spellcheck="false">
+
+                <div class="form-group disabled">
+                    <label>Email</label>
+                    <input type="email" id="signup-email-display" readonly>
                 </div>
-                <button class="btn-auth-continue" id="btn-signup-finish">Sign Up & Continue</button>
-                <button class="btn-link-back" id="btn-back-to-login">← Back to login</button>
+
+                <div class="form-group password-field">
+                    <label for="signup-password">Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="signup-password" placeholder="Password">
+                        <button class="toggle-password" type="button" data-target="signup-password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="password-check-list">
+                    <div class="check-item" id="check-length">
+                        <span class="icon">✕</span> At least 6 characters
+                    </div>
+                    <div class="check-item" id="check-number">
+                        <span class="icon">✕</span> At least 1 number
+                    </div>
+                    <div class="check-item" id="check-letter">
+                        <span class="icon">✕</span> At least 1 letter
+                    </div>
+                </div>
+
+                <div class="form-group password-field">
+                    <label for="signup-confirm">Confirm password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="signup-confirm" placeholder="Confirm password">
+                        <button class="toggle-password" type="button" data-target="signup-confirm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="terms-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="signup-terms">
+                        <span class="checkmark"></span>
+                        <span class="terms-text">
+                            I am 13 years (or the applicable minimum age) or older and accept the
+                            <a href="#">terms and conditions</a> and <a href="#">privacy policy</a>
+                        </span>
+                    </label>
+                </div>
+
+                <button class="btn-auth-continue disabled" id="btn-signup-continue" disabled>Continue</button>
             </div>
         </div>
     </div>
@@ -276,7 +335,7 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js?v=1.9"></script>
+    <script type="module" src="/main.js?v=1.10"></script>
 </body>
 
 </html>
