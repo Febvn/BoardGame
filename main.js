@@ -212,11 +212,27 @@ class GameEngine {
         if (user) {
             // User is signed in
             const userName = user.user_metadata?.full_name || user.email;
-            if (signInBtn) signInBtn.innerHTML = `<span>${userName.split(' ')[0]}</span>`;
-            if (mobileSignInBtn) mobileSignInBtn.innerHTML = `
-                <div class="user-avatar-mini" style="background-image: url('${user.user_metadata?.avatar_url}')">
-                    ${!user.user_metadata?.avatar_url ? user.email[0].toUpperCase() : ''}
-                </div>`;
+            const firstName = userName.split(' ')[0];
+            const avatarUrl = user.user_metadata?.avatar_url;
+
+            // Updated Desktop Sign-in Button with Avatar
+            if (signInBtn) {
+                signInBtn.innerHTML = `
+                    <div class="user-profile-btn">
+                        <div class="user-avatar-mini" style="background-image: url('${avatarUrl}')">
+                            ${!avatarUrl ? firstName[0].toUpperCase() : ''}
+                        </div>
+                        <span>${firstName}</span>
+                    </div>
+                `;
+            }
+
+            if (mobileSignInBtn) {
+                mobileSignInBtn.innerHTML = `
+                    <div class="user-avatar-mini" style="background-image: url('${avatarUrl}')">
+                        ${!avatarUrl ? firstName[0].toUpperCase() : ''}
+                    </div>`;
+            }
             this.hideAuthModal();
         } else {
             // User is signed out

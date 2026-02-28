@@ -141,15 +141,22 @@ body {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-white);
-    padding: 0.6rem 1.4rem;
-    border-radius: var(--radius-md);
+    padding: 0.45rem 1rem;
+    border-radius: 50px;
     font-family: var(--font-main);
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
     transition: var(--transition);
-    overflow: hidden;
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .btn-login:hover {
@@ -160,8 +167,8 @@ body {
 }
 
 .user-avatar-mini {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
@@ -170,9 +177,9 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
 /* ═══════════════════════════════════════
