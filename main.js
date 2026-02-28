@@ -212,12 +212,14 @@ class GameEngine {
         const signupView = document.getElementById('auth-signup-view');
         const accountView = document.getElementById('auth-account-view');
         const usernameView = document.getElementById('auth-username-view');
+        const confirmView = document.getElementById('auth-confirm-email-view');
         const modal = document.getElementById('auth-modal');
 
         initialView.classList.add('hidden');
         signupView.classList.add('hidden');
         accountView.classList.add('hidden');
         usernameView.classList.add('hidden');
+        confirmView.classList.add('hidden');
         modal.classList.remove('logged-in');
 
         if (step === 'initial') {
@@ -229,6 +231,8 @@ class GameEngine {
             modal.classList.add('logged-in');
         } else if (step === 'username') {
             usernameView.classList.remove('hidden');
+        } else if (step === 'confirm') {
+            confirmView.classList.remove('hidden');
         }
     }
 
@@ -361,9 +365,8 @@ class GameEngine {
         if (error) {
             alert('Error: ' + error.message);
         } else {
-            alert('Account created! Please check your email to confirm your account (or refresh if the email confirmation is OFF).');
-            this.hideAuthModal();
-            window.location.reload();
+            // Success! Show the "Check your email" screen
+            this.showAuthStep('confirm');
         }
     }
 

@@ -371,6 +371,26 @@
                 </p>
             </div>
 
+            <!-- New Check Email View -->
+            <div class="modal-body hidden" id="auth-confirm-email-view">
+                <div class="signup-title-section">
+                    <div class="email-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            style="width: 60px; height: 60px; color: var(--accent); margin-bottom: 1.5rem;">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h2>Confirm your email</h2>
+                    <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">We've sent a
+                        confirmation link to your inbox. Please click the link to activate your account and start
+                        playing.</p>
+                </div>
+                <button class="btn-auth-continue" onclick="window.location.reload()">I've confirmed my email</button>
+            </div>
+
             <!-- New Account View (When Logged In) -->
             <div class="modal-body hidden" id="auth-account-view">
                 <div class="user-account-preview">
