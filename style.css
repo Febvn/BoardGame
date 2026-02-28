@@ -498,18 +498,61 @@ body {
     background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-.btn-auth-continue.danger:hover {
-    background: linear-gradient(135deg, #f87171, #ef4444);
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+.btn-random-username {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
 }
 
-#auth-modal.logged-in .modal-header h2 {
-    display: none;
+.btn-random-username:hover {
+    color: var(--text-white);
+    transform: rotate(45deg);
 }
 
-#auth-modal.logged-in .modal-nav-header h3 {
-    width: 100%;
+.btn-random-username svg {
+    width: 20px;
+    height: 20px;
+}
+
+.auth-disclaimer {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
     text-align: center;
+    line-height: 1.5;
+}
+
+.auth-disclaimer u {
+    color: #ef4444;
+    /* Alert Red */
+    text-decoration: underline;
+}
+
+.username-field .input-with-icon input:focus {
+    border-color: #ec4899;
+    /* Pinkish-red border from image */
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.1);
+}
+
+.password-check-list .check-item.invalid {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+#close-username-view {
+    padding: 8px;
+    background: none;
+    border: none;
+    color: var(--text-white);
+    cursor: pointer;
 }
 
 .btn-link-back {

@@ -113,7 +113,17 @@ class GameEngine {
         const signOutBtn = document.getElementById('btn-sign-out');
         if (signOutBtn) signOutBtn.addEventListener('click', () => this.handleSignOut());
 
+        const userContinueBtn = document.getElementById('btn-username-continue');
+        if (userContinueBtn) userContinueBtn.addEventListener('click', () => this.handleUsernameContinue());
+
+        const randomUserBtn = document.getElementById('btn-random-username');
+        if (randomUserBtn) randomUserBtn.addEventListener('click', () => this.generateRandomUsername());
+
+        const closeUserBtn = document.getElementById('close-username-view');
+        if (closeUserBtn) closeUserBtn.addEventListener('click', () => this.hideAuthModal());
+
         this.setupAuthEvents();
+        this.setupUsernameValidation();
 
         // Google Login Action
         const googleLoginBtn = document.querySelector('.btn-google-login');
@@ -201,11 +211,13 @@ class GameEngine {
         const initialView = document.getElementById('auth-initial-view');
         const signupView = document.getElementById('auth-signup-view');
         const accountView = document.getElementById('auth-account-view');
+        const usernameView = document.getElementById('auth-username-view');
         const modal = document.getElementById('auth-modal');
 
         initialView.classList.add('hidden');
         signupView.classList.add('hidden');
         accountView.classList.add('hidden');
+        usernameView.classList.add('hidden');
         modal.classList.remove('logged-in');
 
         if (step === 'initial') {
@@ -215,6 +227,8 @@ class GameEngine {
         } else if (step === 'account') {
             accountView.classList.remove('hidden');
             modal.classList.add('logged-in');
+        } else if (step === 'username') {
+            usernameView.classList.remove('hidden');
         }
     }
 
@@ -312,8 +326,58 @@ class GameEngine {
 
         if (error) alert('Error: ' + error.message);
         else {
-            alert('Account created! Please check your email to confirm your account.');
+            // Instead of closing, go to username selection
+            this.showAuthStep('username');
+        }
+    }
+
+    setupUsernameValidation() {
+        const userInput = document.getElementById('signup-username');
+        const continueBtn = document.getElementById('btn-username-continue');
+
+        const validateUsername = () => {
+            const val = userInput.value;
+            const lengthValid = val.length >= 6 && val.length <= 20;
+            const formatValid = /^[a-zA-Z0-9._]+$/.test(val);
+
+            document.getElementById('check-user-length').classList.toggle('valid', lengthValid);
+            document.getElementById('check-user-length').classList.toggle('invalid', !lengthValid && val.length > 0);
+            document.getElementById('check-user-format').classList.toggle('valid', formatValid);
+            document.getElementById('check-user-format').classList.toggle('invalid', !formatValid && val.length > 0);
+
+            const isValid = lengthValid && formatValid;
+            continueBtn.disabled = !isValid;
+            continueBtn.classList.toggle('disabled', !isValid);
+        };
+
+        userInput.addEventListener('input', validateUsername);
+    }
+
+    generateRandomUsername() {
+        const adjectives = ['Cool', 'Super', 'Hyper', 'Crazy', 'Elite', 'Mega', 'Shadow', 'Neon'];
+        const nouns = ['Gamer', 'Legend', 'Knight', 'Panda', 'Eagle', 'Phantom', 'Storm', 'Rex'];
+        const randomName = adjectives[Math.floor(Math.random() * adjectives.length)] + 
+                          nouns[Math.floor(Math.random() * nouns.length)] + 
+                          Math.floor(Math.random() * 999);
+        const input = document.getElementById('signup-username');
+        input.value = randomName;
+        // Trigger validation
+        const event = new Event('input', { bubbles: true });
+        input.dispatchEvent(event);
+    }
+
+    async handleUsernameContinue() {
+        const username = document.getElementById('signup-username').value;
+        // Update user metadata in Supabase
+        const { error } = await this.supabase.auth.updateUser({
+            data: { full_name: username }
+        });
+
+        if (error) alert('Error: ' + error.message);
+        else {
+            alert('Username set! Welcome to BOARD3D.');
             this.hideAuthModal();
+            window.location.reload();
         }
     }
 

@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.11">
+    <link rel="stylesheet" href="style.css?v=1.12">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.11</span>
+                <span class="version-badge">v1.12</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.11</span>
+                <span class="version-badge">v1.12</span>
             </div>
         </aside>
 
@@ -321,6 +321,56 @@
                 <button class="btn-auth-continue disabled" id="btn-signup-continue" disabled>Continue</button>
             </div>
 
+            <!-- New Username View (After Signup) -->
+            <div class="modal-body hidden" id="auth-username-view">
+                <header class="modal-nav-header">
+                    <div style="width: 40px;"></div>
+                    <h3>Sign up</h3>
+                    <button class="modal-close" id="close-username-view" aria-label="Close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </header>
+
+                <div class="signup-title-section">
+                    <h2>Set your username</h2>
+                </div>
+
+                <div class="form-group username-field">
+                    <div class="input-with-icon">
+                        <input type="text" id="signup-username" placeholder="Username" spellcheck="false">
+                        <button class="btn-random-username" id="btn-random-username" type="button"
+                            aria-label="Randomize">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 3 21 3 21 8"></polyline>
+                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                <polyline points="21 16 21 21 16 21"></polyline>
+                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="password-check-list">
+                    <div class="check-item" id="check-user-length">
+                        <span class="icon">✕</span> 6 to 20 characters
+                    </div>
+                    <div class="check-item" id="check-user-format">
+                        <span class="icon">✕</span> Only letters, numbers, '.' and '_'
+                    </div>
+                </div>
+
+                <button class="btn-auth-continue disabled" id="btn-username-continue" disabled>Continue</button>
+
+                <p class="auth-disclaimer">
+                    We will <u>permanently ban</u> accounts with toxic & inappropriate usernames without any notice. So
+                    let's keep the community nice and safe for everybody!
+                </p>
+            </div>
+
             <!-- New Account View (When Logged In) -->
             <div class="modal-body hidden" id="auth-account-view">
                 <div class="user-account-preview">
@@ -347,7 +397,7 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js?v=1.11"></script>
+    <script type="module" src="/main.js?v=1.12"></script>
 </body>
 
 </html>
