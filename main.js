@@ -263,9 +263,16 @@ class GameEngine {
             const hasLetter = /[a-zA-Z]/.test(pass);
             const match = pass === conf && pass.length > 0;
 
-            document.getElementById('check-length').classList.toggle('valid', hasLength);
-            document.getElementById('check-number').classList.toggle('valid', hasNumber);
-            document.getElementById('check-letter').classList.toggle('valid', hasLetter);
+            const updateItem = (id, isValid) => {
+                const el = document.getElementById(id);
+                const icon = el.querySelector('.icon');
+                el.classList.toggle('valid', isValid);
+                if (icon) icon.innerText = isValid ? '✓' : '✕';
+            };
+
+            updateItem('check-length', hasLength);
+            updateItem('check-number', hasNumber);
+            updateItem('check-letter', hasLetter);
 
             const isValid = hasLength && hasNumber && hasLetter && match && checked;
             continueBtn.disabled = !isValid;
@@ -321,10 +328,16 @@ class GameEngine {
             const lengthValid = val.length >= 6 && val.length <= 20;
             const formatValid = /^[a-zA-Z0-9._]+$/.test(val);
 
-            document.getElementById('check-user-length').classList.toggle('valid', lengthValid);
-            document.getElementById('check-user-length').classList.toggle('invalid', !lengthValid && val.length > 0);
-            document.getElementById('check-user-format').classList.toggle('valid', formatValid);
-            document.getElementById('check-user-format').classList.toggle('invalid', !formatValid && val.length > 0);
+            const updateItem = (id, isValid) => {
+                const el = document.getElementById(id);
+                const icon = el.querySelector('.icon');
+                el.classList.toggle('valid', isValid);
+                el.classList.toggle('invalid', !isValid && val.length > 0);
+                if (icon) icon.innerText = isValid ? '✓' : '✕';
+            };
+
+            updateItem('check-user-length', lengthValid);
+            updateItem('check-user-format', formatValid);
 
             const isValid = lengthValid && formatValid;
             continueBtn.disabled = !isValid;
