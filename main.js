@@ -99,6 +99,15 @@ class GameEngine {
         this.closeAuthModalBtn.addEventListener('click', () => this.hideAuthModal());
         this.authModal.addEventListener('click', e => { if (e.target === this.authModal) this.hideAuthModal(); });
 
+        // Email Login / Sign Up Logic
+        const initialContinueBtn = document.getElementById('btn-initial-continue');
+        const signupFinishBtn = document.getElementById('btn-signup-finish');
+        const backToLoginBtn = document.getElementById('btn-back-to-login');
+
+        if (initialContinueBtn) initialContinueBtn.addEventListener('click', () => this.handleContinue());
+        if (signupFinishBtn) signupFinishBtn.addEventListener('click', () => this.handleSignUp());
+        if (backToLoginBtn) backToLoginBtn.addEventListener('click', () => this.showAuthStep('initial'));
+
         // Google Login Action
         const googleLoginBtn = document.querySelector('.btn-google-login');
         if (googleLoginBtn) {
@@ -178,6 +187,75 @@ class GameEngine {
 
     hideAuthModal() {
         this.authModal.classList.add('hidden');
+        this.showAuthStep('initial'); // Reset for next time
+    }
+
+    showAuthStep(step) {
+        const initialView = document.getElementById('auth-initial-view');
+        const signupView = document.getElementById('auth-signup-view');
+        if (step === 'initial') {
+            initialView.classList.remove('hidden');
+            signupView.classList.add('hidden');
+        } else {
+            initialView.classList.add('hidden');
+            signupView.classList.remove('hidden');
+        }
+    }
+
+    async handleContinue() {
+        const emailInput = document.getElementById('auth-email');
+        const email = emailInput.value.trim();
+        if (!email) return alert('Please enter your email.');
+
+        try {
+            // Check if user has a profile (simulated user check)
+            // You should have a 'profiles' table with 'email' column
+            const { data, error } = await this.supabase
+                .from('profiles')
+                .select('email')
+                .eq('email', email)
+                .single();
+
+            if (data) {
+                // User already exists -> Send Login Link
+                this.handleLogin(email);
+            } else {
+                // User doesn't exist -> Show Sign Up view
+                this.showAuthStep('signup');
+            }
+        } catch (error) {
+            // Profile not found also ends up here if .single() is used
+            this.showAuthStep('signup');
+        }
+    }
+
+    async handleLogin(email) {
+        const { error } = await this.supabase.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: window.location.origin }
+        });
+        if (error) alert('Error: ' + error.message);
+        else alert('Login link sent! Check your email.');
+    }
+
+    async handleSignUp() {
+        const email = document.getElementById('auth-email').value;
+        const name = document.getElementById('auth-name').value;
+        if (!name) return alert('Please enter your name.');
+
+        const { error } = await this.supabase.auth.signUp({
+            email: email,
+            options: {
+                data: { full_name: name },
+                emailRedirectTo: window.location.origin
+            }
+        });
+
+        if (error) alert('Error: ' + error.message);
+        else {
+            alert('Sign up successful! Check your email to confirm.');
+            this.hideAuthModal();
+        }
     }
 
     async handleGoogleLogin() {

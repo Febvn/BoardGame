@@ -263,6 +263,41 @@ body {
     color: var(--text-white);
 }
 
+.modal-body.hidden {
+    display: none;
+}
+
+.signup-info {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.signup-info h3 {
+    color: var(--text-white);
+    margin-bottom: 0.5rem;
+}
+
+.signup-info p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.btn-link-back {
+    display: block;
+    width: 100%;
+    margin-top: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-link-back:hover {
+    color: var(--text-white);
+}
+
 .user-account-preview {
     display: flex;
     align-items: center;

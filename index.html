@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.8">
+    <link rel="stylesheet" href="style.css?v=1.9">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.8</span>
+                <span class="version-badge">v1.9</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.8</span>
+                <span class="version-badge">v1.9</span>
             </div>
         </aside>
 
@@ -222,7 +222,7 @@
             <div class="modal-header">
                 <h2>Log in or sign up</h2>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="auth-initial-view">
                 <button class="btn-google-login">
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path
@@ -245,7 +245,21 @@
                     <label for="auth-email">Enter your email</label>
                     <input type="email" id="auth-email" placeholder="name@example.com" spellcheck="false">
                 </div>
-                <button class="btn-auth-continue">Continue</button>
+                <button class="btn-auth-continue" id="btn-initial-continue">Continue</button>
+            </div>
+
+            <!-- New Signup View -->
+            <div class="modal-body hidden" id="auth-signup-view">
+                <div class="signup-info">
+                    <h3>Create account</h3>
+                    <p>It looks like you're new here! Let's get you set up.</p>
+                </div>
+                <div class="form-group">
+                    <label for="auth-name">Full Name</label>
+                    <input type="text" id="auth-name" placeholder="Enter your name" spellcheck="false">
+                </div>
+                <button class="btn-auth-continue" id="btn-signup-finish">Sign Up & Continue</button>
+                <button class="btn-link-back" id="btn-back-to-login">← Back to login</button>
             </div>
         </div>
     </div>
@@ -262,7 +276,7 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js?v=1.8"></script>
+    <script type="module" src="/main.js?v=1.9"></script>
 </body>
 
 </html>
