@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 class GameEngine {
     constructor() {
@@ -38,7 +44,10 @@ class GameEngine {
         this.isRolling = false;
         this.animating = false;
         this.isMobile = window.innerWidth <= 768;
+        this.supabase = supabase;
+        this.user = null;
         this.init();
+        this.checkUserSession();
     }
 
     async init() {
@@ -79,7 +88,7 @@ class GameEngine {
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
         this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
-        
+
         // Use Global Event Delegation for Sign In buttons (more robust)
         document.addEventListener('click', e => {
             if (e.target.closest('.btn-show-auth')) {
@@ -89,6 +98,13 @@ class GameEngine {
 
         this.closeAuthModalBtn.addEventListener('click', () => this.hideAuthModal());
         this.authModal.addEventListener('click', e => { if (e.target === this.authModal) this.hideAuthModal(); });
+
+        // Google Login Action
+        const googleLoginBtn = document.querySelector('.btn-google-login');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', () => this.handleGoogleLogin());
+        }
+
         this.setupMobileMenu();
         this.setupNavigation();
         this.setupLandingPage();
@@ -162,6 +178,57 @@ class GameEngine {
 
     hideAuthModal() {
         this.authModal.classList.add('hidden');
+    }
+
+    async handleGoogleLogin() {
+        try {
+            const { error } = await this.supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error logging in with Google:', error.message);
+            alert('Error logging in with Google: ' + error.message);
+        }
+    }
+
+    async checkUserSession() {
+        const { data: { session } } = await this.supabase.auth.getSession();
+        this.updateUserUI(session?.user || null);
+
+        this.supabase.auth.onAuthStateChange((_event, session) => {
+            this.updateUserUI(session?.user || null);
+        });
+    }
+
+    updateUserUI(user) {
+        this.user = user;
+        const signInBtn = document.querySelector('.btn-login');
+        const mobileSignInBtn = document.querySelector('.mobile-actions .btn-show-auth');
+
+        if (user) {
+            // User is signed in
+            const userName = user.user_metadata?.full_name || user.email;
+            if (signInBtn) signInBtn.innerHTML = `<span>${userName.split(' ')[0]}</span>`;
+            if (mobileSignInBtn) mobileSignInBtn.innerHTML = `
+                <div class="user-avatar-mini" style="background-image: url('${user.user_metadata?.avatar_url}')">
+                    ${!user.user_metadata?.avatar_url ? user.email[0].toUpperCase() : ''}
+                </div>`;
+            this.hideAuthModal();
+        } else {
+            // User is signed out
+            if (signInBtn) signInBtn.innerHTML = '<span>Sign In</span>';
+            if (mobileSignInBtn) {
+                mobileSignInBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>`;
+            }
+        }
     }
 
     setCamera(x, y, z) { const s = this.isMobile ? 1.3 : 1; this.camera.position.set(x * s, y * s, z * s); this.camera.lookAt(0, 0, 0); this.controls.target.set(0, 0, 0); this.controls.update(); }

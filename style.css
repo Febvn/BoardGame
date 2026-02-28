@@ -159,6 +159,22 @@ body {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
+.user-avatar-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
 /* ═══════════════════════════════════════
    AUTH MODAL
    ═══════════════════════════════════════ */
@@ -1366,7 +1382,8 @@ main {
         gap: 0.8rem;
     }
 
-    .nav-icon-btn, .btn-login {
+    .nav-icon-btn,
+    .btn-login {
         padding: 6px 10px;
         font-size: 0.75rem;
     }
