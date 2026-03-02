@@ -200,6 +200,11 @@ class GameEngine {
 
     showAuthModal() {
         this.authModal.classList.remove('hidden');
+        if (this.user) {
+            this.showAuthStep('account');
+        } else {
+            this.showAuthStep('initial');
+        }
     }
 
     hideAuthModal() {

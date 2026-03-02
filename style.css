@@ -458,6 +458,8 @@ body {
 .user-account-preview {
     text-align: center;
     padding: 1rem 0 2rem 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .user-avatar-large {
@@ -476,18 +478,23 @@ body {
     color: white;
     border: 3px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
 }
 
 .user-account-preview h2 {
     color: var(--text-white);
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     margin-bottom: 0.5rem;
     font-weight: 700;
+    word-break: break-word;
+    /* Fix long names */
+    line-height: 1.3;
 }
 
 .user-account-preview p {
     color: var(--text-muted);
-    font-size: 0.95rem;
+    word-break: break-all;
+    /* Fix long emails/IDs */
 }
 
 .account-actions {
@@ -571,33 +578,18 @@ body {
     color: var(--text-white);
 }
 
-.user-account-preview {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-md);
-    margin-bottom: 1.5rem;
+/* Hiding Login Elements when Logged In */
+.modal-overlay.logged-in .modal-header,
+.modal-overlay.logged-in .btn-google-login,
+.modal-overlay.logged-in .auth-separator {
+    display: none !important;
 }
 
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    background: var(--accent);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: white;
-}
-
-.user-email {
-    font-size: 0.95rem;
-    color: var(--text-white);
-    font-weight: 500;
+.modal-overlay.logged-in .modal-nav-header h3 {
+    flex: 1;
+    text-align: center;
+    margin-right: 40px;
+    /* Counter-balance the back button space */
 }
 
 .auth-separator {
