@@ -131,6 +131,17 @@ class GameEngine {
         const closeUserBtn = document.getElementById('close-username-view');
         if (closeUserBtn) closeUserBtn.addEventListener('click', () => this.hideAuthModal());
 
+        // Reset, Terms, Privacy
+        document.getElementById('btn-show-reset')?.addEventListener('click', () => this.showAuthStep('reset'));
+        document.getElementById('btn-show-terms')?.addEventListener('click', () => this.showAuthStep('terms'));
+        document.getElementById('btn-show-privacy')?.addEventListener('click', () => this.showAuthStep('privacy'));
+
+        document.getElementById('btn-reset-back')?.addEventListener('click', () => this.showAuthStep('login'));
+        document.getElementById('btn-terms-back')?.addEventListener('click', () => this.showAuthStep('signup'));
+        document.getElementById('btn-privacy-back')?.addEventListener('click', () => this.showAuthStep('signup'));
+
+        document.getElementById('btn-reset-password')?.addEventListener('click', () => this.handleResetPassword());
+
         this.setupAuthEvents();
         this.setupUsernameValidation();
 
@@ -228,14 +239,14 @@ class GameEngine {
         const accountView = document.getElementById('auth-account-view');
         const usernameView = document.getElementById('auth-username-view');
         const confirmView = document.getElementById('auth-confirm-email-view');
+        const resetView = document.getElementById('auth-reset-view');
+        const termsView = document.getElementById('auth-terms-view');
+        const privacyView = document.getElementById('auth-privacy-view');
         const modal = document.getElementById('auth-modal');
 
-        initialView.classList.add('hidden');
-        loginView.classList.add('hidden');
-        signupView.classList.add('hidden');
-        accountView.classList.add('hidden');
-        usernameView.classList.add('hidden');
-        confirmView.classList.add('hidden');
+        const views = [initialView, loginView, signupView, accountView, usernameView, confirmView, resetView, termsView, privacyView];
+        views.forEach(v => v?.classList.add('hidden'));
+
         modal.classList.remove('logged-in');
 
         if (step === 'initial') {
@@ -243,12 +254,10 @@ class GameEngine {
         } else if (step === 'login') {
             loginView.classList.remove('hidden');
             document.getElementById('login-email-display').value = document.getElementById('auth-email').value;
-            // Security: Clear password field when entering login view
             document.getElementById('login-password').value = '';
         } else if (step === 'signup') {
             signupView.classList.remove('hidden');
             document.getElementById('signup-email-display').value = document.getElementById('auth-email').value;
-            // Security: Clear password fields when entering signup view
             document.getElementById('signup-password').value = '';
             document.getElementById('signup-confirm').value = '';
         } else if (step === 'account') {
@@ -258,6 +267,13 @@ class GameEngine {
             usernameView.classList.remove('hidden');
         } else if (step === 'confirm') {
             confirmView.classList.remove('hidden');
+        } else if (step === 'reset') {
+            resetView.classList.remove('hidden');
+            document.getElementById('reset-email-input').value = document.getElementById('auth-email').value;
+        } else if (step === 'terms') {
+            termsView.classList.remove('hidden');
+        } else if (step === 'privacy') {
+            privacyView.classList.remove('hidden');
         }
     }
 
@@ -357,6 +373,22 @@ class GameEngine {
             this.showToast('Logged in successfully!', 'success');
             this.hideAuthModal();
             setTimeout(() => window.location.reload(), 1000);
+        }
+    }
+
+    async handleResetPassword() {
+        const email = document.getElementById('reset-email-input').value;
+        if (!email) return this.showToast('Please enter your email.', 'error');
+
+        const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin
+        });
+
+        if (error) {
+            this.showToast(error.message, 'error');
+        } else {
+            this.showToast('Reset link sent! Check your email.', 'success');
+            this.showAuthStep('login');
         }
     }
 

@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.24">
+    <link rel="stylesheet" href="style.css?v=1.25">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.24</span>
+                <span class="version-badge">v1.25</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.24</span>
+                <span class="version-badge">v1.25</span>
             </div>
         </aside>
 
@@ -284,7 +284,7 @@
                 </div>
 
                 <button class="btn-auth-continue" id="btn-login-finish">Log in</button>
-                <p class="auth-switch">Forgot password? <a href="#">Reset here</a></p>
+                <p class="auth-switch">Forgot password? <button id="btn-show-reset">Reset here</button></p>
             </div>
 
             <!-- Updated Signup View -->
@@ -352,7 +352,8 @@
                         <span class="checkmark"></span>
                         <span class="terms-text">
                             I am 13 years (or the applicable minimum age) or older and accept the
-                            <a href="#">terms and conditions</a> and <a href="#">privacy policy</a>
+                            <button class="text-link" id="btn-show-terms">terms and conditions</button> and <button
+                                class="text-link" id="btn-show-privacy">privacy policy</button>
                         </span>
                     </label>
                 </div>
@@ -447,6 +448,83 @@
                     <button class="btn-auth-continue danger" id="btn-sign-out">Sign Out</button>
                 </div>
             </div>
+
+            <!-- New Reset Password View -->
+            <div class="modal-body hidden" id="auth-reset-view">
+                <header class="modal-nav-header">
+                    <button class="btn-icon-nav" id="btn-reset-back" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3>Reset Password</h3>
+                    <div style="width: 40px;"></div>
+                </header>
+                <div class="signup-title-section">
+                    <h2>Lost your access?</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Enter your email and we'll send you a link
+                        to reset your password.</p>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reset-email-input" placeholder="name@example.com">
+                </div>
+                <button class="btn-auth-continue" id="btn-reset-password">Send Reset Link</button>
+            </div>
+
+            <!-- New Terms and Conditions View -->
+            <div class="modal-body hidden" id="auth-terms-view">
+                <header class="modal-nav-header">
+                    <button class="btn-icon-nav" id="btn-terms-back" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3>Terms & Conditions</h3>
+                    <div style="width: 40px;"></div>
+                </header>
+                <div class="modal-scroll-content">
+                    <h4>1. Acceptance of Terms</h4>
+                    <p>By accessing BOARD3D, you agree to be bound by these terms. Our platform is for entertainment and
+                        gaming purposes only.</p>
+                    <h4>2. User Accounts</h4>
+                    <p>You are responsible for maintaining the confidentiality of your account password and for all
+                        activities that occur under your account.</p>
+                    <h4>3. Community Standards</h4>
+                    <p>We will permanently ban accounts with toxic, inappropriate, or offensive usernames without
+                        notice. Be respectful to other gamers.</p>
+                    <h4>4. Premium Assets</h4>
+                    <p>All 3D models and gaming assets are property of BOARD3D. Unauthorized distribution is strictly
+                        prohibited.</p>
+                </div>
+            </div>
+
+            <!-- New Privacy Policy View -->
+            <div class="modal-body hidden" id="auth-privacy-view">
+                <header class="modal-nav-header">
+                    <button class="btn-icon-nav" id="btn-privacy-back" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3>Privacy Policy</h3>
+                    <div style="width: 40px;"></div>
+                </header>
+                <div class="modal-scroll-content">
+                    <h4>1. Data Collection</h4>
+                    <p>We collect your email, username, and basic profile information (if using Google) to provide a
+                        persistent gaming experience.</p>
+                    <h4>2. How We Use Data</h4>
+                    <p>Your data is used solely for game saves, leaderboards, and account security. We do not sell your
+                        personal information.</p>
+                    <h4>3. Security</h4>
+                    <p>We use Supabase (an enterprise-grade platform) to ensure your passwords and data are encrypted
+                        and safe.</p>
+                    <h4>4. Third-Party Services</h4>
+                    <p>Google Auth is used only for seamless login. We do not have access to your Google password or
+                        private drive files.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -464,7 +542,7 @@
 
     <div id="toast-container"></div>
 
-    <script type="module" src="/main.js?v=1.24"></script>
+    <script type="module" src="/main.js?v=1.25"></script>
 </body>
 
 </html>
