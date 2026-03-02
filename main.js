@@ -755,28 +755,26 @@ class GameEngine {
         this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY, offsetX, offsetZ, captured: { White: 0, Black: 0 } };
 
         // Create Trophy Trays (Visual containers for captured pieces)
-        // Width: 2.5 cells, Height: 7.5 cells (fits 16 pieces in 2 rows nicely)
-        const trayGeom = new THREE.BoxGeometry(cell * 2.5, 0.1, cell * 7.5);
+        // Width: 2.8 cells, Height: 8 cells (Increased size for clarity)
+        // Moved much further out (7.5 cells) to avoid colliding with board wide borders
+        const trayGeom = new THREE.BoxGeometry(cell * 2.8, 0.2, cell * 8);
         const trayMat = new THREE.MeshStandardMaterial({
-            color: 0x0f172a,
-            metalness: 0.6,
-            roughness: 0.4,
-            polygonOffset: true,
-            polygonOffsetFactor: -1,
-            polygonOffsetUnits: -1
+            color: 0x050505,
+            metalness: 0.2,
+            roughness: 0.8
         });
 
-        const tx = (side) => center.x + (side * 6.3) * cell + offsetX;
+        const tx = (side) => center.x + (side * 7.5) * cell + offsetX;
 
-        // Black Tray (Left) - for pieces White has captured (Black pieces)
+        // Black Tray (Left) - for captured Black pieces
         const trayL = new THREE.Mesh(trayGeom, trayMat);
-        trayL.position.set(tx(-1), topY - 0.051, center.z + offsetZ);
+        trayL.position.set(tx(-1), topY - 0.11, center.z + offsetZ);
         trayL.receiveShadow = true;
         this.piecesGroup.add(trayL);
 
-        // White Tray (Right) - for pieces Black has captured (White pieces)
+        // White Tray (Right) - for captured White pieces
         const trayR = new THREE.Mesh(trayGeom, trayMat);
-        trayR.position.set(tx(1), topY - 0.051, center.z + offsetZ);
+        trayR.position.set(tx(1), topY - 0.11, center.z + offsetZ);
         trayR.receiveShadow = true;
         this.piecesGroup.add(trayR);
 
@@ -792,11 +790,11 @@ class GameEngine {
 
         // Captured pieces layout: 2 rows of 8 pieces on each tray
         const side = color === 'Black' ? -1 : 1;
-        const spacingZ = gs.cell * 0.9;
-        const spacingX = gs.cell * 0.9;
+        const spacingZ = gs.cell * 0.95;
+        const spacingX = gs.cell * 1.0;
 
-        const baseX = gs.center.x + (side * 6.0) * gs.cell + (gs.offsetX || 0);
-        const baseZ = gs.center.z - 3.15 * gs.cell + (gs.offsetZ || 0);
+        const baseX = gs.center.x + (side * 7.5) * gs.cell + (gs.offsetX || 0);
+        const baseZ = gs.center.z - 3.4 * gs.cell + (gs.offsetZ || 0);
 
         const row = Math.floor(count / 8);
         const col = count % 8;
@@ -804,7 +802,7 @@ class GameEngine {
         const finalX = baseX + (row === 0 ? -spacingX / 2 : spacingX / 2) * (side === -1 ? 1 : -1);
         const finalZ = baseZ + col * spacingZ;
 
-        // Sit pieces exactly on top of the tray (tray top is at topY - 0.051 + 0.05 = topY - 0.001 approx)
+        // Sit pieces exactly on top of the tray (tray top is at topY - 0.11 + 0.1 = topY - 0.01)
         this.animateMove(piece.mesh, finalX, gs.topY, finalZ);
         gs.captured[color]++;
     }
