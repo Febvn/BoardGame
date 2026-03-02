@@ -661,7 +661,7 @@ class GameEngine {
             bx.userData = { index: i }; this.scene.add(bx); this.hitboxes.push(bx);
         }
         this.setCamera(0, 6, 5);
-        this.updateTurnUI('X', '#6366f1');
+        this.updateTurnUI('X', '#f5f5f7');
     }
 
     // ═══════════════════════ CHECKERS ═══════════════════════
@@ -788,7 +788,7 @@ class GameEngine {
         this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
         const q = Math.min(size.x, size.z) * 0.28, topY = center.y + size.y / 2 + 0.02;
-        const colors = [{ c: 0xf43f5e, name: 'Red', ox: -q, oz: -q }, { c: 0x3b82f6, name: 'Blue', ox: q, oz: -q }, { c: 0x10b981, name: 'Green', ox: -q, oz: q }, { c: 0xfacc15, name: 'Yellow', ox: q, oz: q }];
+        const colors = [{ c: 0xf5f5f7, name: 'White', ox: -q, oz: -q }, { c: 0x111111, name: 'Black', ox: q, oz: -q }, { c: 0xa1a1aa, name: 'Silver', ox: -q, oz: q }, { c: 0x4b5563, name: 'Gray', ox: q, oz: q }];
         const spread = q * 0.3;
         const players = {};
         colors.forEach(b => {
@@ -800,9 +800,9 @@ class GameEngine {
             });
             players[b.name] = { tokens, color: b.c };
         });
-        this.gameState = { currentPlayer: 'Red', gameOver: false, players, diceResult: null, rolled: false, topY, center };
+        this.gameState = { currentPlayer: 'White', gameOver: false, players, diceResult: null, rolled: false, topY, center };
         this.setCamera(0, 10, 6);
-        this.updateTurnUI('Red', '#f43f5e');
+        this.updateTurnUI('White', '#f5f5f7');
     }
 
     // ═══════════════════════ MONOPOLY ═══════════════════════
@@ -822,18 +822,18 @@ class GameEngine {
         for (let i = 1; i <= steps; i++) positions.push({ x: center.x + half - (i / steps) * 2 * half, z: center.z - half }); // top going left
         for (let i = 1; i <= steps; i++) positions.push({ x: center.x - half, z: center.z - half + (i / steps) * 2 * half }); // left going down
         for (let i = 1; i < steps; i++) positions.push({ x: center.x - half + (i / steps) * 2 * half, z: center.z + half }); // bottom going right
-        const p1 = this.placePiece('token', positions[0].x, topY, positions[0].z, 0xf43f5e, 0.35);
-        const p2 = this.placePiece('token', positions[0].x - 0.25, topY, positions[0].z + 0.25, 0x3b82f6, 0.35);
+        const p1 = this.placePiece('token', positions[0].x, topY, positions[0].z, 0xf5f5f7, 0.35);
+        const p2 = this.placePiece('token', positions[0].x - 0.25, topY, positions[0].z + 0.25, 0x111111, 0.35);
         this.gameState = {
             currentPlayer: 0, gameOver: false, topY, positions,
             players: [
-                { mesh: p1, pos: 0, color: '#f43f5e', name: 'Red' },
-                { mesh: p2, pos: 0, color: '#3b82f6', name: 'Blue' }
+                { mesh: p1, pos: 0, color: '#f5f5f7', name: 'White' },
+                { mesh: p2, pos: 0, color: '#111111', name: 'Black' }
             ],
             rolled: false,
         };
         this.setCamera(0, 10, 7);
-        this.updateTurnUI('Red', '#f43f5e');
+        this.updateTurnUI('White', '#f5f5f7');
     }
 
     // ═══════════════════════ BACKGAMMON ═══════════════════════
@@ -846,18 +846,18 @@ class GameEngine {
         const { size, center } = this.getBoardMetrics(this.board);
         const topY = center.y + size.y / 2 + 0.02;
         // Standard initial setup: point distribution
-        const setup = [[0, 2, 'Red'], [5, 5, 'Blue'], [7, 3, 'Blue'], [11, 5, 'Red'], [12, 5, 'Blue'], [16, 3, 'Red'], [18, 5, 'Red'], [23, 2, 'Blue']];
+        const setup = [[0, 2, 'White'], [5, 5, 'Black'], [7, 3, 'Black'], [11, 5, 'White'], [12, 5, 'Black'], [16, 3, 'White'], [18, 5, 'White'], [23, 2, 'Black']];
         const pointX = (pt) => { const col = pt < 12 ? (11 - pt) : (pt - 12); return center.x + (col - 5.5) * size.x * 0.065; };
         const pointZ = (pt) => pt < 12 ? center.z + size.z * 0.35 : center.z - size.z * 0.35;
         const dir = (pt) => pt < 12 ? -1 : 1;
         setup.forEach(([pt, count, color]) => {
             for (let i = 0; i < count; i++) {
-                this.placePiece('man', pointX(pt), topY + i * 0.08, pointZ(pt) + dir(pt) * i * size.z * 0.06, color === 'Red' ? 0xf43f5e : 0x3b82f6, 0.28);
+                this.placePiece('man', pointX(pt), topY + i * 0.08, pointZ(pt) + dir(pt) * i * size.z * 0.06, color === 'White' ? 0xf5f5f7 : 0x111111, 0.28);
             }
         });
-        this.gameState = { currentPlayer: 'Red', gameOver: false };
+        this.gameState = { currentPlayer: 'White', gameOver: false };
         this.setCamera(0, 8, 8);
-        this.updateTurnUI('Red', '#f43f5e');
+        this.updateTurnUI('White', '#f5f5f7');
     }
 
     // ═══════════════════════ MILL (Nine Men's Morris) ═══════════════════════
