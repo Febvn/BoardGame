@@ -243,9 +243,14 @@ class GameEngine {
         } else if (step === 'login') {
             loginView.classList.remove('hidden');
             document.getElementById('login-email-display').value = document.getElementById('auth-email').value;
+            // Security: Clear password field when entering login view
+            document.getElementById('login-password').value = '';
         } else if (step === 'signup') {
             signupView.classList.remove('hidden');
             document.getElementById('signup-email-display').value = document.getElementById('auth-email').value;
+            // Security: Clear password fields when entering signup view
+            document.getElementById('signup-password').value = '';
+            document.getElementById('signup-confirm').value = '';
         } else if (step === 'account') {
             accountView.classList.remove('hidden');
             modal.classList.add('logged-in');
