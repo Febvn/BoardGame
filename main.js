@@ -732,13 +732,13 @@ class GameEngine {
             const x = c => center.x + (c - 3.5) * cell + offsetX;
             const z = r => center.z + (r - 3.5) * cell + offsetZ;
             // Row 0 = black back, Row 1 = black pawns, Row 6 = white pawns, Row 7 = white back
-            const wb = this.placePiece(`chess_${order[i]}_white`, x(i), topY, z(7), 0xffffff, 1.0);
+            const wb = this.placePiece(`chess_${order[i]}_white`, x(i), topY, z(7), 0xffffff, 0.85);
             board[7][i] = { type: order[i], color: 'White', mesh: wb };
-            const wp = this.placePiece('chess_pawn_white', x(i), topY, z(6), 0xffffff, 1.0);
+            const wp = this.placePiece('chess_pawn_white', x(i), topY, z(6), 0xffffff, 0.85);
             board[6][i] = { type: 'pawn', color: 'White', mesh: wp };
-            const bb = this.placePiece(`chess_${order[i]}_black`, x(i), topY, z(0), 0x333333, 1.0, Math.PI);
+            const bb = this.placePiece(`chess_${order[i]}_black`, x(i), topY, z(0), 0x333333, 0.85, Math.PI);
             board[0][i] = { type: order[i], color: 'Black', mesh: bb };
-            const bp = this.placePiece('chess_pawn_black', x(i), topY, z(1), 0x333333, 1.0, Math.PI);
+            const bp = this.placePiece('chess_pawn_black', x(i), topY, z(1), 0x333333, 0.85, Math.PI);
             board[1][i] = { type: 'pawn', color: 'Black', mesh: bp };
         }
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
