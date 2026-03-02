@@ -1375,7 +1375,7 @@ aside header p {
 }
 
 .game-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: #FFFFFF;
     color: black;
     box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
     border-color: transparent;
