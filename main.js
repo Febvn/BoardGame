@@ -753,6 +753,21 @@ class GameEngine {
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
         this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY, offsetX, offsetZ, captured: { White: 0, Black: 0 } };
+
+        // Create Trophy Trays (Visual containers for captured pieces)
+        const trayGeom = new THREE.BoxGeometry(cell * 2.2, 0.05, cell * 7);
+        const trayMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+
+        // Black Tray (Left) - for pieces White has captured (Black pieces)
+        const trayL = new THREE.Mesh(trayGeom, trayMat);
+        trayL.position.set(center.x - 5.5 * cell + offsetX, topY - 0.1, center.z + offsetZ);
+        this.scene.add(trayL); this.board.add(trayL); // Parent to board so it clears on reset
+
+        // White Tray (Right) - for pieces Black has captured (White pieces)
+        const trayR = new THREE.Mesh(trayGeom, trayMat);
+        trayR.position.set(center.x + 5.5 * cell + offsetX, topY - 0.1, center.z + offsetZ);
+        this.scene.add(trayR); this.board.add(trayR);
+
         this.setCamera(0, 8, 7);
         this.updateTurnUI('White', '#f8fafc');
     }
@@ -763,16 +778,15 @@ class GameEngine {
         const color = piece.color;
         const count = gs.captured[color];
 
-        // Position: Black pieces on the left (-X), White pieces on the right (+X)
+        // Position on Trophy Trays
         const side = color === 'Black' ? -1 : 1;
-        const spacing = gs.cell * 0.7;
-        // Place just outside the board (4.5 cells from center)
-        const baseX = gs.center.x + (side * 4.8) * gs.cell + (gs.offsetX || 0);
-        const baseZ = gs.center.z + (count % 8 - 3.5) * spacing + (gs.offsetZ || 0);
-        // If more than 8 pieces, start a second row further out
-        const extraX = (count >= 8 ? gs.cell * 0.8 : 0) * side;
+        const spacing = gs.cell * 0.8;
+        const baseX = gs.center.x + (side * 5.2) * gs.cell + (gs.offsetX || 0);
+        const baseZ = gs.center.z - 2.8 * gs.cell + (count % 8) * spacing + (gs.offsetZ || 0);
+        const extraX = (count >= 8 ? gs.cell * 0.7 : 0) * side;
 
-        this.animateMove(piece.mesh, baseX + extraX, gs.topY, baseZ);
+        // Move to a slightly lower 'tray' level
+        this.animateMove(piece.mesh, baseX + extraX, gs.topY - 0.08, baseZ);
         gs.captured[color]++;
     }
 
