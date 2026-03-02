@@ -589,7 +589,7 @@ class GameEngine {
         try {
             await this['setup_' + gt](load);
             this.loadingBar.style.width = '80%';
-            if (this.board) this.board.traverse(c => { if (c.isMesh) { c.receiveShadow = true; c.castShadow = true; } });
+            if (this.board) this.board.traverse(c => { if (c.isMesh) { c.receiveShadow = true; c.castShadow = false; } });
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
         const dg = ['ludo', 'monopoly', 'backgammon'];
         this.rollBtn.classList.toggle('hidden', !dg.includes(gt));
