@@ -737,14 +737,15 @@ class GameEngine {
             const z = r => center.z + (r - 3.5) * cell + offsetZ;
             // Row 0 = black back, Row 1 = black pawns, Row 6 = white pawns, Row 7 = white back
             const wb = this.placePiece(`chess_${order[i]}_white`, x(i), topY, z(7), 0xffffff, 0.85);
-            board[7][i] = { type: order[i], color: 'White', mesh: wb };
+            board[7][i] = { type: order[i], color: 'White', mesh: wb, moved: false };
             const wp = this.placePiece('chess_pawn_white', x(i), topY, z(6), 0xffffff, 0.85);
-            board[6][i] = { type: 'pawn', color: 'White', mesh: wp };
-            // BLACK PIECES: Move forward towards center (z + 0.6) and left (x - 0.05)
-            const bb = this.placePiece(`chess_${order[i]}_black`, x(i) - 0.05, topY, z(0) + 0.6, 0x333333, 0.85, Math.PI);
-            board[0][i] = { type: order[i], color: 'Black', mesh: bb };
-            const bp = this.placePiece('chess_pawn_black', x(i) - 0.05, topY, z(1) + 0.6, 0x333333, 0.85, Math.PI);
-            board[1][i] = { type: 'pawn', color: 'Black', mesh: bp };
+            board[6][i] = { type: 'pawn', color: 'White', mesh: wp, moved: false };
+            // BLACK PIECES: Using calculated offsets to match visual squares
+            const bx = x(i) - 0.05, bz = z(0) + 0.6;
+            const bb = this.placePiece(`chess_${order[i]}_black`, bx, topY, bz, 0x333333, 0.85, Math.PI);
+            board[0][i] = { type: order[i], color: 'Black', mesh: bb, moved: false, offX: -0.05, offZ: 0.6 };
+            const bp = this.placePiece('chess_pawn_black', bx, topY, z(1) + 0.6, 0x333333, 0.85, Math.PI);
+            board[1][i] = { type: 'pawn', color: 'Black', mesh: bp, moved: false, offX: -0.05, offZ: 0.6 };
         }
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
             const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.95, 0.1, cell * 0.95), new THREE.MeshBasicMaterial({ visible: false }));
@@ -756,8 +757,34 @@ class GameEngine {
         this.updateTurnUI('White', '#f8fafc');
     }
 
-    getChessMoves(r, c) {
-        const b = this.gameState.board, p = b[r][c];
+    isAttacked(r, c, color) {
+        const b = this.gameState.board;
+        const inB = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+        const isEnemy = (r, c, type) => inB(r, c) && b[r][c] && b[r][c].color !== color && (Array.isArray(type) ? type.includes(b[r][c].type) : b[r][c].type === type);
+
+        // Pawn
+        const pDir = color === 'White' ? -1 : 1;
+        if (isEnemy(r + pDir, c - 1, 'pawn') || isEnemy(r + pDir, c + 1, 'pawn')) return true;
+        // Knight
+        for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) if (isEnemy(r + dr, c + dc, 'knight')) return true;
+        // King
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) if (dr !== 0 || dc !== 0) if (isEnemy(r + dr, c + dc, 'king')) return true;
+        // Sliding (Rock, Bishop, Queen)
+        const checkSlide = (dr, dc, types) => {
+            for (let i = 1; i < 8; i++) {
+                const nr = r + dr * i, nc = c + dc * i;
+                if (!inB(nr, nc)) break;
+                if (b[nr][nc]) { if (b[nr][nc].color !== color && types.includes(b[nr][nc].type)) return true; break; }
+            }
+            return false;
+        };
+        if (checkSlide(1, 0, ['rock', 'queen']) || checkSlide(-1, 0, ['rock', 'queen']) || checkSlide(0, 1, ['rock', 'queen']) || checkSlide(0, -1, ['rock', 'queen'])) return true;
+        if (checkSlide(1, 1, ['bishop', 'queen']) || checkSlide(1, -1, ['bishop', 'queen']) || checkSlide(-1, 1, ['bishop', 'queen']) || checkSlide(-1, -1, ['bishop', 'queen'])) return true;
+        return false;
+    }
+
+    getChessMoves(r, c, ignoreCheck = false) {
+        const gs = this.gameState, b = gs.board, p = b[r][c];
         if (!p) return [];
         const moves = [], col = p.color;
         const inB = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
@@ -773,15 +800,42 @@ class GameEngine {
                 if (isEmpty(r + dir, c)) { moves.push([r + dir, c]); if (r === startRow && isEmpty(r + 2 * dir, c)) moves.push([r + 2 * dir, c]); }
                 if (isEnemy(r + dir, c - 1)) moves.push([r + dir, c - 1]);
                 if (isEnemy(r + dir, c + 1)) moves.push([r + dir, c + 1]);
+                // En Passant
+                if (gs.enPassant && Math.abs(gs.enPassant.c - c) === 1 && r === (col === 'White' ? 3 : 4)) moves.push([r + dir, gs.enPassant.c]);
                 break;
             }
             case 'rock': addSlide(1, 0); addSlide(-1, 0); addSlide(0, 1); addSlide(0, -1); break;
             case 'bishop': addSlide(1, 1); addSlide(1, -1); addSlide(-1, 1); addSlide(-1, -1); break;
             case 'queen': addSlide(1, 0); addSlide(-1, 0); addSlide(0, 1); addSlide(0, -1); addSlide(1, 1); addSlide(1, -1); addSlide(-1, 1); addSlide(-1, -1); break;
-            case 'king': for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (dr === 0 && dc === 0) continue; if (canGo(r + dr, c + dc)) moves.push([r + dr, c + dc]); } break;
+            case 'king':
+                for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) if (dr !== 0 || dc !== 0) if (canGo(r + dr, c + dc)) moves.push([r + dr, c + dc]);
+                // Castling
+                if (!ignoreCheck && !p.moved && !this.isAttacked(r, c, col)) {
+                    const checkCastling = (rookCol, path) => {
+                        const rook = b[r][rookCol];
+                        if (rook && rook.type === 'rock' && !rook.moved) {
+                            if (path.every(pc => isEmpty(r, pc) && !this.isAttacked(r, pc, col))) moves.push([r, path[1]]);
+                        }
+                    };
+                    checkCastling(0, [1, 2, 3]); // Queen side
+                    checkCastling(7, [6, 5]); // King side
+                }
+                break;
             case 'knight': for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) if (canGo(r + dr, c + dc)) moves.push([r + dr, c + dc]); break;
         }
-        return moves;
+
+        if (ignoreCheck) return moves;
+
+        // Filter moves that leave King in check
+        return moves.filter(([mr, mc]) => {
+            const originalDest = b[mr][mc];
+            b[mr][mc] = p; b[r][c] = null;
+            let kr, kc;
+            for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) if (b[ir][ic] && b[ir][ic].color === col && b[ir][ic].type === 'king') { kr = ir; kc = ic; }
+            const safe = !this.isAttacked(kr, kc, col);
+            b[r][c] = p; b[mr][mc] = originalDest;
+            return safe;
+        });
     }
 
     // ═══════════════════════ LUDO ═══════════════════════
@@ -1092,13 +1146,42 @@ class GameEngine {
         });
     }
 
+    getCheckerMoves(r, c, forceJumpOnly = false) {
+        const gs = this.gameState, b = gs.board, p = b[r][c];
+        if (!p) return [];
+        const dirs = p.king ? [-1, 1] : (p.color === 'White' ? [-1] : [1]);
+        const moves = [], jumps = [];
+        for (const dr of dirs) for (const dc of [-1, 1]) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                if (!b[nr][nc]) { if (!forceJumpOnly) moves.push({ r: nr, c: nc, jump: false }); }
+                else if (b[nr][nc].color !== p.color) {
+                    const jr = nr + dr, jc = nc + dc;
+                    if (jr >= 0 && jr < 8 && jc >= 0 && jc < 8 && !b[jr][jc]) jumps.push({ r: jr, c: jc, jump: true, captR: nr, captC: nc });
+                }
+            }
+        }
+        return jumps.length > 0 ? jumps : moves;
+    }
+
     clickCheckers() {
         const gs = this.gameState, b = gs.board;
         const hitSq = this.raycaster.intersectObjects(this.hitboxes);
-        if (hitSq.length === 0) return;
+        if (hitSq.length === 0 || gs.gameOver) return;
         const { row: r, col: c } = hitSq[0].object.userData;
+
+        // --- Forced Jump Rule: Check if ANY piece can jump ---
+        const anyJumpAvailable = () => {
+            for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) {
+                if (b[ir][ic] && b[ir][ic].color === gs.currentPlayer) {
+                    if (this.getCheckerMoves(ir, ic).some(m => m.jump)) return true;
+                }
+            }
+            return false;
+        };
+
         if (gs.selected) {
-            const moves = this.getCheckerMoves(gs.selected.r, gs.selected.c);
+            const moves = this.getCheckerMoves(gs.selected.r, gs.selected.c, gs.mustJump);
             const move = moves.find(m => m.r === r && m.c === c);
             if (move) {
                 const piece = b[gs.selected.r][gs.selected.c];
@@ -1107,22 +1190,24 @@ class GameEngine {
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
                 if (move.jump) { const cap = b[move.captR][move.captC]; this.piecesGroup.remove(cap.mesh); b[move.captR][move.captC] = null; }
                 this.animateMove(piece.mesh, tx, topY, tz, () => {
-                    // King promotion
                     if ((piece.color === 'White' && r === 0) || (piece.color === 'Black' && r === 7)) {
                         piece.king = true;
                         piece.mesh.traverse(ch => { if (ch.isMesh) ch.material.emissive = new THREE.Color(0xffd700); ch.material.emissiveIntensity = 0.3; });
                     }
-                    // Check for extra jump
-                    if (move.jump) { const extra = this.getCheckerMoves(r, c).filter(m => m.jump); if (extra.length > 0) { gs.selected = { r, c }; this.clearHighlights(); extra.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell + ox, topY, cen.z + (m.r - 3.5) * cell + oz, cell)); return; } }
-                    this.clearHighlights(); gs.selected = null;
+                    if (move.jump) {
+                        const extra = this.getCheckerMoves(r, c).filter(m => m.jump);
+                        if (extra.length > 0) { gs.selected = { r, c }; gs.mustJump = true; this.clearHighlights(); extra.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell + ox, topY, cen.z + (m.r - 3.5) * cell + oz, cell)); return; }
+                    }
+                    this.clearHighlights(); gs.selected = null; gs.mustJump = false;
                     gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
                     this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f5f5f7' : '#555555');
                     this.checkCheckersWin();
                 });
-            } else if (b[r][c] && b[r][c].color === gs.currentPlayer) {
+            } else if (b[r][c] && b[r][c].color === gs.currentPlayer && !gs.mustJump) {
                 this.selectCheckerPiece(r, c);
-            } else { this.clearHighlights(); gs.selected = null; }
+            } else { if (!gs.mustJump) { this.clearHighlights(); gs.selected = null; } }
         } else if (b[r][c] && b[r][c].color === gs.currentPlayer) {
+            gs.mustJump = anyJumpAvailable();
             this.selectCheckerPiece(r, c);
         }
     }
@@ -1136,40 +1221,88 @@ class GameEngine {
 
     checkCheckersWin() {
         const gs = this.gameState, b = gs.board;
-        let white = 0, black = 0;
-        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { if (b[r][c]) { if (b[r][c].color === 'White') white++; else black++; } }
-        if (white === 0) { gs.gameOver = true; this.updateTurnUI('Black WINS!', '#555555'); this.gameStatus.innerText = 'Black wins! 🎉'; }
-        else if (black === 0) { gs.gameOver = true; this.updateTurnUI('White WINS!', '#f5f5f7'); this.gameStatus.innerText = 'White wins! 🎉'; }
+        let whiteCount = 0, blackCount = 0;
+        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { if (b[r][c]) { if (b[r][c].color === 'White') whiteCount++; else blackCount++; } }
+        if (whiteCount === 0) {
+            gs.gameOver = true; this.updateTurnUI('Black WINS!', '#555555'); this.gameStatus.innerText = 'Black wins! 🎉';
+        } else if (blackCount === 0) {
+            gs.gameOver = true; this.updateTurnUI('White WINS!', '#f5f5f7'); this.gameStatus.innerText = 'White wins! 🎉';
+        }
     }
 
     clickChess() {
         const gs = this.gameState, b = gs.board;
         const hitSq = this.raycaster.intersectObjects(this.hitboxes);
-        if (hitSq.length === 0) return;
+        if (hitSq.length === 0 || gs.gameOver) return;
         const { row: r, col: c } = hitSq[0].object.userData;
+
+        const getPos = (r, c, p) => {
+            const ox = (gs.offsetX || 0) + (p.offX || 0), oz = (gs.offsetZ || 0) + (p.offZ || 0);
+            return { x: gs.center.x + (c - 3.5) * gs.cell + ox, z: gs.center.z + (r - 3.5) * gs.cell + oz };
+        };
+
         if (gs.selected) {
             const isValid = gs.validMoves.some(([mr, mc]) => mr === r && mc === c);
             if (isValid) {
                 const piece = b[gs.selected.r][gs.selected.c];
-                // Capture
-                if (b[r][c]) {
-                    const captured = b[r][c];
-                    this.piecesGroup.remove(captured.mesh);
-                    if (captured.type === 'king') { gs.gameOver = true; }
+                const target = b[r][c];
+
+                // --- SPECIAL MOVE: Castling ---
+                if (piece.type === 'king' && Math.abs(c - gs.selected.c) === 2) {
+                    const rookCol = c === 6 ? 7 : 0;
+                    const rookNewCol = c === 6 ? 5 : 3;
+                    const rook = b[r][rookCol];
+                    b[r][rookNewCol] = rook; b[r][rookCol] = null;
+                    const rp = getPos(r, rookNewCol, rook);
+                    this.animateMove(rook.mesh, rp.x, gs.topY, rp.z);
+                    rook.moved = true;
                 }
+
+                // --- SPECIAL MOVE: En Passant ---
+                if (piece.type === 'pawn' && c !== gs.selected.c && !target) {
+                    const epRow = gs.selected.r;
+                    const epTarget = b[epRow][c];
+                    this.piecesGroup.remove(epTarget.mesh);
+                    b[epRow][c] = null;
+                }
+
+                // --- NORMAL MOVE / CAPTURE ---
+                if (target) this.piecesGroup.remove(target.mesh);
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
-                const ox = gs.offsetX || 0, oz = gs.offsetZ || 0;
-                const tx = gs.center.x + (c - 3.5) * gs.cell + ox, tz = gs.center.z + (r - 3.5) * gs.cell + oz;
-                // Pawn promotion
+
+                // Promotion (Auto to Queen)
                 if (piece.type === 'pawn' && (r === 0 || r === 7)) piece.type = 'queen';
-                this.animateMove(piece.mesh, tx, gs.topY, tz, () => {
+
+                // Update En Passant potential
+                gs.enPassant = (piece.type === 'pawn' && Math.abs(r - gs.selected.r) === 2) ? { r, c } : null;
+                piece.moved = true;
+
+                const tp = getPos(r, c, piece);
+                this.animateMove(piece.mesh, tp.x, gs.topY, tp.z, () => {
                     this.clearHighlights(); gs.selected = null; gs.validMoves = [];
-                    if (gs.gameOver) {
-                        this.updateTurnUI(`${gs.currentPlayer} WINS!`, gs.currentPlayer === 'White' ? '#f8fafc' : '#64748b');
-                        this.gameStatus.innerText = `${gs.currentPlayer} wins by capturing the King! 👑`;
+                    gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
+
+                    // Check for Game Over (Checkmate / Stalemate)
+                    let hasLegalMoves = false;
+                    for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) {
+                        if (b[ir][ic] && b[ir][ic].color === gs.currentPlayer) {
+                            if (this.getChessMoves(ir, ic).length > 0) { hasLegalMoves = true; break; }
+                        }
+                    }
+
+                    let kr, kc;
+                    for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) if (b[ir][ic] && b[ir][ic].color === gs.currentPlayer && b[ir][ic].type === 'king') { kr = ir; kc = ic; }
+                    const inCheck = this.isAttacked(kr, kc, gs.currentPlayer);
+
+                    if (!hasLegalMoves) {
+                        gs.gameOver = true;
+                        const msg = inCheck ? `CHECKMATE! ${gs.currentPlayer === 'White' ? 'Black' : 'White'} Wins!` : "STALEMATE! It's a draw.";
+                        this.updateTurnUI(msg, '#f43f5e');
+                        this.gameStatus.innerText = msg;
                     } else {
-                        gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
+                        const status = inCheck ? `CHECK! ${gs.currentPlayer}'s turn.` : `${gs.currentPlayer}'s turn.`;
                         this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f8fafc' : '#64748b');
+                        this.gameStatus.innerText = status;
                     }
                 });
             } else if (b[r][c] && b[r][c].color === gs.currentPlayer) {
@@ -1208,14 +1341,14 @@ class GameEngine {
             token.inBase = false; token.pos = 0;
             // Move to start position (just offset from center)
             const angle = ['Red', 'Blue', 'Green', 'Yellow'].indexOf(gs.currentPlayer) * Math.PI / 2;
-            const r = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15;
-            const tx = gs.center.x + Math.cos(angle) * r, tz = gs.center.z + Math.sin(angle) * r;
+            const radius = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15;
+            const tx = gs.center.x + Math.cos(angle) * radius, tz = gs.center.z + Math.sin(angle) * radius;
             this.animateMove(token.mesh, tx, gs.topY, tz, () => { this.advanceLudoTurn(); });
         } else if (!token.inBase) {
             token.pos += gs.diceResult;
             const angle = ['Red', 'Blue', 'Green', 'Yellow'].indexOf(gs.currentPlayer) * Math.PI / 2 + (token.pos * 0.15);
-            const r = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15 + token.pos * 0.12;
-            const tx = gs.center.x + Math.cos(angle) * r, tz = gs.center.z + Math.sin(angle) * r;
+            const radius = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15 + token.pos * 0.12;
+            const tx = gs.center.x + Math.cos(angle) * radius, tz = gs.center.z + Math.sin(angle) * radius;
             this.animateMove(token.mesh, tx, gs.topY, tz, () => { this.advanceLudoTurn(); });
         }
     }
