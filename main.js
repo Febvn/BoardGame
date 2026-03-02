@@ -48,7 +48,6 @@ class GameEngine {
         this.user = null;
         this.init();
         this.checkUserSession();
-        this.startTTTAnimation();
     }
 
     async init() {
@@ -208,53 +207,6 @@ class GameEngine {
         this.menuToggle.classList.remove('active');
 
         await this.loadGame(gt);
-    }
-
-    startTTTAnimation() {
-        const cells = document.querySelectorAll('.ttt-cell');
-        const strike = document.querySelector('.ttt-strike');
-        let moveIndex = 0;
-
-        // Sequence leading to a diagonal win for X
-        const gameMoves = [
-            { idx: 0, type: 'x' },
-            { idx: 1, type: 'o' },
-            { idx: 4, type: 'x' },
-            { idx: 2, type: 'o' },
-            { idx: 8, type: 'x' } // X wins diagonal!
-        ];
-
-        const runSequence = () => {
-            if (!this.loadingOverlay || this.loadingOverlay.classList.contains('hidden')) return;
-
-            if (moveIndex === 0) {
-                cells.forEach(c => c.className = 'ttt-cell');
-                strike.className = 'ttt-strike';
-                strike.style.width = '0%';
-            }
-
-            const move = gameMoves[moveIndex];
-            cells[move.idx].classList.add(move.type);
-            moveIndex++;
-
-            if (moveIndex === gameMoves.length) {
-                // Show win strike after a slight delay
-                setTimeout(() => {
-                    strike.classList.add('diag-1');
-                    strike.style.width = '130%';
-
-                    // Reset and start over after win is shown
-                    setTimeout(() => {
-                        moveIndex = 0;
-                        runSequence();
-                    }, 1500);
-                }, 400);
-            } else {
-                setTimeout(runSequence, 700);
-            }
-        };
-
-        runSequence();
     }
 
     showLandingPage() {

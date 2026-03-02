@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.28">
+    <link rel="stylesheet" href="style.css?v=1.29">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.28</span>
+                <span class="version-badge">v1.29</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.28</span>
+                <span class="version-badge">v1.29</span>
             </div>
         </aside>
 
@@ -530,17 +530,9 @@
 
     <!-- ═══════════════════════ LOADING OVERLAY ═══════════════════════ -->
     <div id="loading-overlay">
-        <div class="ttt-loader">
-            <div class="ttt-cell" data-index="0"></div>
-            <div class="ttt-cell" data-index="1"></div>
-            <div class="ttt-cell" data-index="2"></div>
-            <div class="ttt-cell" data-index="3"></div>
-            <div class="ttt-cell" data-index="4"></div>
-            <div class="ttt-cell" data-index="5"></div>
-            <div class="ttt-cell" data-index="6"></div>
-            <div class="ttt-cell" data-index="7"></div>
-            <div class="ttt-cell" data-index="8"></div>
-            <div class="ttt-strike"></div>
+        <div class="loader-container">
+            <div class="loader-ring"></div>
+            <div class="loader-ring delay"></div>
         </div>
         <p id="loading-text">Initializing World...</p>
         <div class="loading-progress">
@@ -550,7 +542,7 @@
 
     <div id="toast-container"></div>
 
-    <script type="module" src="/main.js?v=1.28"></script>
+    <script type="module" src="/main.js?v=1.29"></script>
 </body>
 
 </html>
