@@ -213,39 +213,45 @@ class GameEngine {
     startTTTAnimation() {
         const cells = document.querySelectorAll('.ttt-cell');
         const strike = document.querySelector('.ttt-strike');
-        let step = 0;
-        const sequence = [
-            { idx: 4, type: 'x' }, // Center
-            { idx: 0, type: 'o' }, // Top-left
-            { idx: 8, type: 'x' }, // Bottom-right
-            { idx: 2, type: 'o' }, // Top-right
-            { idx: 0, type: 'x' }  // Overwrite or new? Let's do a fixed win path:
-        ];
+        let moveIndex = 0;
 
-        // Realistic game sequence for the loader
+        // Sequence leading to a diagonal win for X
         const gameMoves = [
+            { idx: 0, type: 'x' },
+            { idx: 1, type: 'o' },
             { idx: 4, type: 'x' },
-            { idx: 0, type: 'o' },
-            { idx: 2, type: 'x' },
-            { idx: 6, type: 'o' },
-            { idx: 3, type: 'x' },
-            { idx: 5, type: 'o' }
+            { idx: 2, type: 'o' },
+            { idx: 8, type: 'x' } // X wins diagonal!
         ];
 
         const runSequence = () => {
             if (!this.loadingOverlay || this.loadingOverlay.classList.contains('hidden')) return;
 
-            const move = gameMoves[step % gameMoves.length];
-            const cell = cells[move.idx];
-
-            if (step % gameMoves.length === 0) {
-                cells.forEach(c => c.className = 'ttt-cell'); // Clear all
+            if (moveIndex === 0) {
+                cells.forEach(c => c.className = 'ttt-cell');
+                strike.className = 'ttt-strike';
+                strike.style.width = '0%';
             }
 
-            cell.classList.add(move.type);
-            step++;
+            const move = gameMoves[moveIndex];
+            cells[move.idx].classList.add(move.type);
+            moveIndex++;
 
-            setTimeout(runSequence, 600);
+            if (moveIndex === gameMoves.length) {
+                // Show win strike after a slight delay
+                setTimeout(() => {
+                    strike.classList.add('diag-1');
+                    strike.style.width = '130%';
+
+                    // Reset and start over after win is shown
+                    setTimeout(() => {
+                        moveIndex = 0;
+                        runSequence();
+                    }, 1500);
+                }, 400);
+            } else {
+                setTimeout(runSequence, 700);
+            }
         };
 
         runSequence();
