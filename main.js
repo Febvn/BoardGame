@@ -241,6 +241,24 @@ class GameEngine {
         }
     }
 
+    showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icon = type === 'success' ? '✓' : '✕';
+        toast.innerHTML = `<span>${icon}</span> ${message}`;
+
+        container.appendChild(toast);
+
+        // Auto remove from DOM after animation
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
     async handleContinue() {
         const emailInput = document.getElementById('auth-email');
         const email = emailInput.value.trim();
@@ -380,13 +398,14 @@ class GameEngine {
         });
 
         if (error) {
-            alert('Error: ' + error.message);
+            this.showToast(error.message, 'error');
         } else {
             // Smart Check: If session exists, user is already logged in (Confirm Email is OFF)
             if (data?.session) {
-                alert('Account created and logged in! Welcome to BOARD3D.');
+                this.showToast('Account created and logged in! Welcome to BOARD3D.', 'success');
                 this.hideAuthModal();
-                window.location.reload();
+                // Delay reload slightly to let toast be seen
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 // No session? Must be waiting for email confirmation
                 this.showAuthStep('confirm');
@@ -405,7 +424,7 @@ class GameEngine {
             if (error) throw error;
         } catch (error) {
             console.error('Error logging in with Google:', error.message);
-            alert('Error logging in with Google: ' + error.message);
+            this.showToast(error.message, 'error');
         }
     }
 
