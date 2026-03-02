@@ -721,9 +721,9 @@ class GameEngine {
         const types = ['pawn', 'rock', 'knight', 'bishop', 'queen', 'king'];
         for (const col of ['white', 'black']) for (const t of types) this.models[`chess_${t}_${col}`] = await load(`Pieces/Chess/chess-${t}-${col}.gltf`);
         const { size, center } = this.getBoardMetrics(this.board);
-        const cell = Math.min(size.x, size.z) * 0.84 / 8;
-        const offsetX = 0.045; // Move more to the right
-        const offsetZ = -0.015; // Move slightly forward towards center
+        const cell = Math.min(size.x, size.z) * 0.85 / 8;
+        const offsetX = 0.055; // Further right
+        const offsetZ = -0.025; // Further forward
         const topY = center.y + size.y / 2 + 0.01;
         const order = ['rock', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rock'];
         // board[r][c] = null | { type, color, mesh }
