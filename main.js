@@ -671,7 +671,7 @@ class GameEngine {
         this.scene.add(this.board);
         this.models.man = await load('Pieces/Man/man-v1-white.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
-        const cell = Math.min(size.x, size.z) * 0.98 / 8; // Improved grid fit for large pieces
+        const cell = Math.min(size.x, size.z) * 0.88 / 8; // Adjust to account for board border
         const topY = center.y + size.y / 2 + 0.02;
         // board[r][c] = null | { color: 'White'|'Black', king: false, mesh }
         const board = Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -684,7 +684,7 @@ class GameEngine {
         }
         // Hitboxes for all dark squares
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 === 1) {
-            const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.98, 0.15, cell * 0.98), new THREE.MeshBasicMaterial({ visible: false }));
+            const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.95, 0.15, cell * 0.95), new THREE.MeshBasicMaterial({ visible: false }));
             hb.position.set(center.x + (c - 3.5) * cell, topY, center.z + (r - 3.5) * cell);
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
