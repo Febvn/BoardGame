@@ -423,7 +423,12 @@ class GameEngine {
         });
 
         if (error) {
-            this.showToast(error.message, 'error');
+            if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('exists')) {
+                this.showToast('This email is already registered. Please log in instead!', 'error');
+                this.showAuthStep('login');
+            } else {
+                this.showToast(error.message, 'error');
+            }
         } else {
             // Smart Check: If session exists, user is already logged in (Confirm Email is OFF)
             if (data?.session) {
