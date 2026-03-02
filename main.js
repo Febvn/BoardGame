@@ -48,6 +48,7 @@ class GameEngine {
         this.user = null;
         this.init();
         this.checkUserSession();
+        this.startTTTAnimation();
     }
 
     async init() {
@@ -207,6 +208,47 @@ class GameEngine {
         this.menuToggle.classList.remove('active');
 
         await this.loadGame(gt);
+    }
+
+    startTTTAnimation() {
+        const cells = document.querySelectorAll('.ttt-cell');
+        const strike = document.querySelector('.ttt-strike');
+        let step = 0;
+        const sequence = [
+            { idx: 4, type: 'x' }, // Center
+            { idx: 0, type: 'o' }, // Top-left
+            { idx: 8, type: 'x' }, // Bottom-right
+            { idx: 2, type: 'o' }, // Top-right
+            { idx: 0, type: 'x' }  // Overwrite or new? Let's do a fixed win path:
+        ];
+
+        // Realistic game sequence for the loader
+        const gameMoves = [
+            { idx: 4, type: 'x' },
+            { idx: 0, type: 'o' },
+            { idx: 2, type: 'x' },
+            { idx: 6, type: 'o' },
+            { idx: 3, type: 'x' },
+            { idx: 5, type: 'o' }
+        ];
+
+        const runSequence = () => {
+            if (!this.loadingOverlay || this.loadingOverlay.classList.contains('hidden')) return;
+
+            const move = gameMoves[step % gameMoves.length];
+            const cell = cells[move.idx];
+
+            if (step % gameMoves.length === 0) {
+                cells.forEach(c => c.className = 'ttt-cell'); // Clear all
+            }
+
+            cell.classList.add(move.type);
+            step++;
+
+            setTimeout(runSequence, 600);
+        };
+
+        runSequence();
     }
 
     showLandingPage() {
