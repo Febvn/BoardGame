@@ -752,9 +752,28 @@ class GameEngine {
             hb.position.set(center.x + (c - 3.5) * cell + offsetX, topY, center.z + (r - 3.5) * cell + offsetZ);
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
-        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY, offsetX, offsetZ };
+        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY, offsetX, offsetZ, captured: { White: 0, Black: 0 } };
         this.setCamera(0, 8, 7);
         this.updateTurnUI('White', '#f8fafc');
+    }
+
+    handleCapture(piece) {
+        const gs = this.gameState;
+        if (!gs.captured) gs.captured = { White: 0, Black: 0 };
+        const color = piece.color;
+        const count = gs.captured[color];
+
+        // Position: Black pieces on the left (-X), White pieces on the right (+X)
+        const side = color === 'Black' ? -1 : 1;
+        const spacing = gs.cell * 0.7;
+        // Place just outside the board (4.5 cells from center)
+        const baseX = gs.center.x + (side * 4.8) * gs.cell + (gs.offsetX || 0);
+        const baseZ = gs.center.z + (count % 8 - 3.5) * spacing + (gs.offsetZ || 0);
+        // If more than 8 pieces, start a second row further out
+        const extraX = (count >= 8 ? gs.cell * 0.8 : 0) * side;
+
+        this.animateMove(piece.mesh, baseX + extraX, gs.topY, baseZ);
+        gs.captured[color]++;
     }
 
     isAttacked(r, c, color) {
@@ -1262,12 +1281,12 @@ class GameEngine {
                 if (piece.type === 'pawn' && c !== gs.selected.c && !target) {
                     const epRow = gs.selected.r;
                     const epTarget = b[epRow][c];
-                    this.piecesGroup.remove(epTarget.mesh);
+                    this.handleCapture(epTarget);
                     b[epRow][c] = null;
                 }
 
                 // --- NORMAL MOVE / CAPTURE ---
-                if (target) this.piecesGroup.remove(target.mesh);
+                if (target) this.handleCapture(target);
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
 
                 // Promotion (Auto to Queen)
