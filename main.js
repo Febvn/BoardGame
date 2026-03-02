@@ -667,24 +667,24 @@ class GameEngine {
     // ═══════════════════════ CHECKERS ═══════════════════════
     async setup_checkers(load) {
         this.gameStatus.innerText = 'Select your piece, then click a valid diagonal move. Jump to capture!';
-        this.board = await load('Boards/Checkers/checkers-board-tan-black.gltf');
+        this.board = await load('Boards/Checkers/checkers-board-white-brown.gltf');
         this.scene.add(this.board);
         this.models.man = await load('Pieces/Man/man-v1-white.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
-        const cell = Math.min(size.x, size.z) * 0.95 / 8; // Better grid fit
+        const cell = Math.min(size.x, size.z) * 0.98 / 8; // Improved grid fit for large pieces
         const topY = center.y + size.y / 2 + 0.02;
         // board[r][c] = null | { color: 'White'|'Black', king: false, mesh }
         const board = Array.from({ length: 8 }, () => Array(8).fill(null));
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
             if ((r + c) % 2 === 1) {
                 const x = center.x + (c - 3.5) * cell, z = center.z + (r - 3.5) * cell;
-                if (r < 3) { const m = this.placePiece('man', x, topY, z, 0x111111, 0.38); board[r][c] = { color: 'Black', king: false, mesh: m }; }
-                else if (r > 4) { const m = this.placePiece('man', x, topY, z, 0xf5f5f7, 0.38); board[r][c] = { color: 'White', king: false, mesh: m }; }
+                if (r < 3) { const m = this.placePiece('man', x, topY, z, 0x111111, 0.45); board[r][c] = { color: 'Black', king: false, mesh: m }; }
+                else if (r > 4) { const m = this.placePiece('man', x, topY, z, 0xf5f5f7, 0.45); board[r][c] = { color: 'White', king: false, mesh: m }; }
             }
         }
         // Hitboxes for all dark squares
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if ((r + c) % 2 === 1) {
-            const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.95, 0.15, cell * 0.95), new THREE.MeshBasicMaterial({ visible: false }));
+            const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.98, 0.15, cell * 0.98), new THREE.MeshBasicMaterial({ visible: false }));
             hb.position.set(center.x + (c - 3.5) * cell, topY, center.z + (r - 3.5) * cell);
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
