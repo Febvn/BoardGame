@@ -723,7 +723,7 @@ class GameEngine {
         const { size, center } = this.getBoardMetrics(this.board);
         const cell = Math.min(size.x, size.z) * 0.85 / 8;
         const offsetX = 0.055; // Further right
-        const offsetZ = -0.025; // Further forward
+        const offsetZ = -0.04; // Move even further forward
         const topY = center.y + size.y / 2 + 0.01;
         const order = ['rock', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rock'];
         // board[r][c] = null | { type, color, mesh }
