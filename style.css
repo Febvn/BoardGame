@@ -592,6 +592,29 @@ body {
     /* Counter-balance the back button space */
 }
 
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.auth-switch button,
+.auth-switch a {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+    text-decoration: none;
+}
+
+.auth-switch button:hover,
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
 .auth-separator {
     display: flex;
     align-items: center;

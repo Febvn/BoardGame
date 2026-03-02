@@ -10,7 +10,7 @@
     <title>BOARD3D | 3D Board Game Collection</title>
     <meta name="description"
         content="BOARD3D - Premium 3D Board Game Collection featuring Chess, Checkers, Tic Tac Toe, Ludo, Monopoly, and more. Play classic board games in stunning 3D.">
-    <link rel="stylesheet" href="style.css?v=1.21">
+    <link rel="stylesheet" href="style.css?v=1.22">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -134,7 +134,7 @@
             </div>
 
             <div class="landing-footer">
-                <span class="version-badge">v1.21</span>
+                <span class="version-badge">v1.22</span>
                 <span class="footer-text">Built with Three.js | Luxury Edition</span>
             </div>
         </div>
@@ -185,7 +185,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <span class="version-badge">v1.21</span>
+                <span class="version-badge">v1.22</span>
             </div>
         </aside>
 
@@ -246,6 +246,45 @@
                     <input type="email" id="auth-email" placeholder="name@example.com" spellcheck="false">
                 </div>
                 <button class="btn-auth-continue" id="btn-initial-continue">Continue</button>
+                <p class="auth-switch">Don't have an account? <button id="switch-to-signup">Sign up</button></p>
+            </div>
+
+            <!-- New Login View -->
+            <div class="modal-body hidden" id="auth-login-view">
+                <header class="modal-nav-header">
+                    <button class="btn-icon-nav" id="btn-login-back" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <h3>Log in</h3>
+                    <div style="width: 40px;"></div>
+                </header>
+
+                <div class="signup-title-section">
+                    <h2>Welcome back</h2>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email-display" readonly>
+                </div>
+
+                <div class="form-group password-field">
+                    <label for="login-password">Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="login-password" placeholder="Enter your password">
+                        <button class="toggle-password" type="button" data-target="login-password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn-auth-continue" id="btn-login-finish">Log in</button>
+                <p class="auth-switch">Forgot password? <a href="#">Reset here</a></p>
             </div>
 
             <!-- Updated Signup View -->
@@ -425,7 +464,7 @@
 
     <div id="toast-container"></div>
 
-    <script type="module" src="/main.js?v=1.21"></script>
+    <script type="module" src="/main.js?v=1.22"></script>
 </body>
 
 </html>

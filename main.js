@@ -116,6 +116,15 @@ class GameEngine {
         const userContinueBtn = document.getElementById('btn-username-continue');
         if (userContinueBtn) userContinueBtn.addEventListener('click', () => this.handleUsernameContinue());
 
+        const loginFinishBtn = document.getElementById('btn-login-finish');
+        if (loginFinishBtn) loginFinishBtn.addEventListener('click', () => this.handleSignIn());
+
+        const switchToSignupBtn = document.getElementById('switch-to-signup');
+        if (switchToSignupBtn) switchToSignupBtn.addEventListener('click', () => this.showAuthStep('signup'));
+
+        const loginBackBtn = document.getElementById('btn-login-back');
+        if (loginBackBtn) loginBackBtn.addEventListener('click', () => this.showAuthStep('initial'));
+
         const randomUserBtn = document.getElementById('btn-random-username');
         if (randomUserBtn) randomUserBtn.addEventListener('click', () => this.generateRandomUsername());
 
@@ -214,6 +223,7 @@ class GameEngine {
 
     showAuthStep(step) {
         const initialView = document.getElementById('auth-initial-view');
+        const loginView = document.getElementById('auth-login-view');
         const signupView = document.getElementById('auth-signup-view');
         const accountView = document.getElementById('auth-account-view');
         const usernameView = document.getElementById('auth-username-view');
@@ -221,6 +231,7 @@ class GameEngine {
         const modal = document.getElementById('auth-modal');
 
         initialView.classList.add('hidden');
+        loginView.classList.add('hidden');
         signupView.classList.add('hidden');
         accountView.classList.add('hidden');
         usernameView.classList.add('hidden');
@@ -229,8 +240,12 @@ class GameEngine {
 
         if (step === 'initial') {
             initialView.classList.remove('hidden');
+        } else if (step === 'login') {
+            loginView.classList.remove('hidden');
+            document.getElementById('login-email-display').value = document.getElementById('auth-email').value;
         } else if (step === 'signup') {
             signupView.classList.remove('hidden');
+            document.getElementById('signup-email-display').value = document.getElementById('auth-email').value;
         } else if (step === 'account') {
             accountView.classList.remove('hidden');
             modal.classList.add('logged-in');
@@ -262,12 +277,11 @@ class GameEngine {
     async handleContinue() {
         const emailInput = document.getElementById('auth-email');
         const email = emailInput.value.trim();
-        if (!email) return alert('Please enter your email.');
+        if (!email) return this.showToast('Please enter your email.', 'error');
 
-        // Optimized: Just move to the next step (Signup/Login) directly
-        // This avoids hitting Supabase Auth Rate Limits (429 errors)
-        document.getElementById('signup-email-display').value = email;
-        this.showAuthStep('signup');
+        // Professional practice: lead to login by default if they enter email
+        // Or detect signup vs login. Let's provide a clear "Log in" step.
+        this.showAuthStep('login');
     }
 
     setupAuthEvents() {
@@ -321,13 +335,24 @@ class GameEngine {
         if (continueBtn) continueBtn.addEventListener('click', () => this.handleSignUp());
     }
 
-    async handleLogin(email) {
-        const { error } = await this.supabase.auth.signInWithOtp({
+    async handleSignIn() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!password) return this.showToast('Please enter your password.', 'error');
+
+        const { data, error } = await this.supabase.auth.signInWithPassword({
             email: email,
-            options: { emailRedirectTo: window.location.origin }
+            password: password
         });
-        if (error) alert('Error: ' + error.message);
-        else alert('Login link sent! Check your email.');
+
+        if (error) {
+            this.showToast(error.message, 'error');
+        } else {
+            this.showToast('Logged in successfully!', 'success');
+            this.hideAuthModal();
+            setTimeout(() => window.location.reload(), 1000);
+        }
     }
 
     async handleSignUp() {
