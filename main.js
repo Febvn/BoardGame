@@ -671,13 +671,15 @@ class GameEngine {
         this.scene.add(this.board);
         this.models.man = await load('Pieces/Man/man-v1-white.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
-        const cell = Math.min(size.x, size.z) * 0.88 / 8; // Adjust to account for board border
+        const cell = Math.min(size.x, size.z) * 0.94 / 8; // Slightly larger to spread them out
+        const offsetX = 0.05; // Offset to fix the "front-corner" shift
+        const offsetZ = 0.05;
         const topY = center.y + size.y / 2 + 0.02;
         // board[r][c] = null | { color: 'White'|'Black', king: false, mesh }
         const board = Array.from({ length: 8 }, () => Array(8).fill(null));
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
             if ((r + c) % 2 === 1) {
-                const x = center.x + (c - 3.5) * cell, z = center.z + (r - 3.5) * cell;
+                const x = center.x + (c - 3.5) * cell + offsetX, z = center.z + (r - 3.5) * cell + offsetZ;
                 if (r < 3) { const m = this.placePiece('man', x, topY, z, 0x111111, 1.0); board[r][c] = { color: 'Black', king: false, mesh: m }; }
                 else if (r > 4) { const m = this.placePiece('man', x, topY, z, 0xf5f5f7, 1.0); board[r][c] = { color: 'White', king: false, mesh: m }; }
             }
@@ -688,7 +690,7 @@ class GameEngine {
             hb.position.set(center.x + (c - 3.5) * cell, topY, center.z + (r - 3.5) * cell);
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
-        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, cell, center, topY };
+        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, cell, center, topY, offsetX, offsetZ };
         this.setCamera(0, 7, 6);
         this.updateTurnUI('White', '#f5f5f7');
     }
@@ -1093,8 +1095,8 @@ class GameEngine {
             const move = moves.find(m => m.r === r && m.c === c);
             if (move) {
                 const piece = b[gs.selected.r][gs.selected.c];
-                const cell = gs.cell, cen = gs.center, topY = gs.topY;
-                const tx = cen.x + (c - 3.5) * cell, tz = cen.z + (r - 3.5) * cell;
+                const cell = gs.cell, cen = gs.center, topY = gs.topY, ox = gs.offsetX, oz = gs.offsetZ;
+                const tx = cen.x + (c - 3.5) * cell + ox, tz = cen.z + (r - 3.5) * cell + oz;
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
                 if (move.jump) { const cap = b[move.captR][move.captC]; this.piecesGroup.remove(cap.mesh); b[move.captR][move.captC] = null; }
                 this.animateMove(piece.mesh, tx, topY, tz, () => {
@@ -1104,7 +1106,7 @@ class GameEngine {
                         piece.mesh.traverse(ch => { if (ch.isMesh) ch.material.emissive = new THREE.Color(0xffd700); ch.material.emissiveIntensity = 0.3; });
                     }
                     // Check for extra jump
-                    if (move.jump) { const extra = this.getCheckerMoves(r, c).filter(m => m.jump); if (extra.length > 0) { gs.selected = { r, c }; this.clearHighlights(); extra.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell, topY, cen.z + (m.r - 3.5) * cell, cell)); return; } }
+                    if (move.jump) { const extra = this.getCheckerMoves(r, c).filter(m => m.jump); if (extra.length > 0) { gs.selected = { r, c }; this.clearHighlights(); extra.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell + ox, topY, cen.z + (m.r - 3.5) * cell + oz, cell)); return; } }
                     this.clearHighlights(); gs.selected = null;
                     gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
                     this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f5f5f7' : '#555555');
@@ -1122,7 +1124,7 @@ class GameEngine {
         const gs = this.gameState;
         this.clearHighlights(); gs.selected = { r, c };
         const moves = this.getCheckerMoves(r, c);
-        moves.forEach(m => this.addHighlight(gs.center.x + (m.c - 3.5) * gs.cell, gs.topY, gs.center.z + (m.r - 3.5) * gs.cell, gs.cell));
+        moves.forEach(m => this.addHighlight(gs.center.x + (m.c - 3.5) * gs.cell + gs.offsetX, gs.topY, gs.center.z + (m.r - 3.5) * gs.cell + gs.offsetZ, gs.cell));
     }
 
     checkCheckersWin() {
