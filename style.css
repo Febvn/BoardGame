@@ -1657,8 +1657,8 @@ main {
     width: 100%;
     height: 100%;
     border: 3px solid rgba(255, 255, 255, 0.05);
-    border-top: 3px solid #D4AF37;
-    /* Gold */
+    border-top: 3px solid #FFFFFF;
+    /* Pure White */
     border-radius: 50%;
     animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
@@ -1668,8 +1668,8 @@ main {
     height: 85%;
     top: 7.5%;
     left: 7.5%;
-    border-top-color: #F5F5F7;
-    /* Silver White */
+    border-top-color: #71717A;
+    /* Muted Gray */
     animation-duration: 1.8s;
     animation-direction: reverse;
 }
@@ -1705,7 +1705,7 @@ main {
 .loading-bar {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #D4AF37, #F5F5F7);
+    background: linear-gradient(90deg, #FFFFFF, #71717A);
     border-radius: 2px;
     transition: width 0.3s ease;
 }
