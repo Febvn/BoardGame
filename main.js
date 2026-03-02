@@ -721,30 +721,32 @@ class GameEngine {
         const types = ['pawn', 'rock', 'knight', 'bishop', 'queen', 'king'];
         for (const col of ['white', 'black']) for (const t of types) this.models[`chess_${t}_${col}`] = await load(`Pieces/Chess/chess-${t}-${col}.gltf`);
         const { size, center } = this.getBoardMetrics(this.board);
-        const cell = Math.min(size.x, size.z) * 0.88 / 8;
+        const cell = Math.min(size.x, size.z) * 0.94 / 8;
+        const offsetX = 0.05;
+        const offsetZ = 0.05;
         const topY = center.y + size.y / 2 + 0.01;
         const order = ['rock', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rock'];
         // board[r][c] = null | { type, color, mesh }
         const board = Array.from({ length: 8 }, () => Array(8).fill(null));
         for (let i = 0; i < 8; i++) {
-            const x = c => center.x + (c - 3.5) * cell;
-            const z = r => center.z + (r - 3.5) * cell;
+            const x = c => center.x + (c - 3.5) * cell + offsetX;
+            const z = r => center.z + (r - 3.5) * cell + offsetZ;
             // Row 0 = black back, Row 1 = black pawns, Row 6 = white pawns, Row 7 = white back
-            const wb = this.placePiece(`chess_${order[i]}_white`, x(i), topY, z(7), 0xffffff, 0.45);
+            const wb = this.placePiece(`chess_${order[i]}_white`, x(i), topY, z(7), 0xffffff, 1.0);
             board[7][i] = { type: order[i], color: 'White', mesh: wb };
-            const wp = this.placePiece('chess_pawn_white', x(i), topY, z(6), 0xffffff, 0.45);
+            const wp = this.placePiece('chess_pawn_white', x(i), topY, z(6), 0xffffff, 1.0);
             board[6][i] = { type: 'pawn', color: 'White', mesh: wp };
-            const bb = this.placePiece(`chess_${order[i]}_black`, x(i), topY, z(0), 0x333333, 0.45, Math.PI);
+            const bb = this.placePiece(`chess_${order[i]}_black`, x(i), topY, z(0), 0x333333, 1.0, Math.PI);
             board[0][i] = { type: order[i], color: 'Black', mesh: bb };
-            const bp = this.placePiece('chess_pawn_black', x(i), topY, z(1), 0x333333, 0.45, Math.PI);
+            const bp = this.placePiece('chess_pawn_black', x(i), topY, z(1), 0x333333, 1.0, Math.PI);
             board[1][i] = { type: 'pawn', color: 'Black', mesh: bp };
         }
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
             const hb = new THREE.Mesh(new THREE.BoxGeometry(cell * 0.95, 0.1, cell * 0.95), new THREE.MeshBasicMaterial({ visible: false }));
-            hb.position.set(center.x + (c - 3.5) * cell, topY, center.z + (r - 3.5) * cell);
+            hb.position.set(center.x + (c - 3.5) * cell + offsetX, topY, center.z + (r - 3.5) * cell + offsetZ);
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
-        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY };
+        this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, validMoves: [], cell, center, topY, offsetX, offsetZ };
         this.setCamera(0, 8, 7);
         this.updateTurnUI('White', '#f8fafc');
     }
@@ -1151,7 +1153,8 @@ class GameEngine {
                     if (captured.type === 'king') { gs.gameOver = true; }
                 }
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
-                const tx = gs.center.x + (c - 3.5) * gs.cell, tz = gs.center.z + (r - 3.5) * gs.cell;
+                const ox = gs.offsetX || 0, oz = gs.offsetZ || 0;
+                const tx = gs.center.x + (c - 3.5) * gs.cell + ox, tz = gs.center.z + (r - 3.5) * gs.cell + oz;
                 // Pawn promotion
                 if (piece.type === 'pawn' && (r === 0 || r === 7)) piece.type = 'queen';
                 this.animateMove(piece.mesh, tx, gs.topY, tz, () => {
@@ -1179,7 +1182,7 @@ class GameEngine {
         gs.validMoves = this.getChessMoves(r, c);
         gs.validMoves.forEach(([mr, mc]) => {
             const color = gs.board[mr][mc] ? 0xFF3131 : 0x00D8FF;
-            this.addHighlight(gs.center.x + (mc - 3.5) * gs.cell, gs.topY, gs.center.z + (mr - 3.5) * gs.cell, gs.cell, color);
+            this.addHighlight(gs.center.x + (mc - 3.5) * gs.cell + (gs.offsetX || 0), gs.topY, gs.center.z + (mr - 3.5) * gs.cell + (gs.offsetZ || 0), gs.cell, color);
         });
     }
 
