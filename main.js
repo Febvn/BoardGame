@@ -678,8 +678,8 @@ class GameEngine {
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
             if ((r + c) % 2 === 1) {
                 const x = center.x + (c - 3.5) * cell, z = center.z + (r - 3.5) * cell;
-                if (r < 3) { const m = this.placePiece('man', x, topY, z, 0x111111, 0.45); board[r][c] = { color: 'Black', king: false, mesh: m }; }
-                else if (r > 4) { const m = this.placePiece('man', x, topY, z, 0xf5f5f7, 0.45); board[r][c] = { color: 'White', king: false, mesh: m }; }
+                if (r < 3) { const m = this.placePiece('man', x, topY, z, 0x111111, 1.0); board[r][c] = { color: 'Black', king: false, mesh: m }; }
+                else if (r > 4) { const m = this.placePiece('man', x, topY, z, 0xf5f5f7, 1.0); board[r][c] = { color: 'White', king: false, mesh: m }; }
             }
         }
         // Hitboxes for all dark squares
