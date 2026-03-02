@@ -756,19 +756,28 @@ class GameEngine {
 
         // Create Trophy Trays (Visual containers for captured pieces)
         // Width: 2.5 cells, Height: 7.5 cells (fits 16 pieces in 2 rows nicely)
-        const trayGeom = new THREE.BoxGeometry(cell * 2.5, 0.06, cell * 7.5);
-        const trayMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 });
+        const trayGeom = new THREE.BoxGeometry(cell * 2.5, 0.1, cell * 7.5);
+        const trayMat = new THREE.MeshStandardMaterial({
+            color: 0x0f172a,
+            metalness: 0.6,
+            roughness: 0.4,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1
+        });
 
-        const tx = (side) => center.x + (side * 6.0) * cell + offsetX;
+        const tx = (side) => center.x + (side * 6.3) * cell + offsetX;
 
         // Black Tray (Left) - for pieces White has captured (Black pieces)
         const trayL = new THREE.Mesh(trayGeom, trayMat);
-        trayL.position.set(tx(-1), topY - 0.04, center.z + offsetZ);
+        trayL.position.set(tx(-1), topY - 0.051, center.z + offsetZ);
+        trayL.receiveShadow = true;
         this.piecesGroup.add(trayL);
 
         // White Tray (Right) - for pieces Black has captured (White pieces)
         const trayR = new THREE.Mesh(trayGeom, trayMat);
-        trayR.position.set(tx(1), topY - 0.04, center.z + offsetZ);
+        trayR.position.set(tx(1), topY - 0.051, center.z + offsetZ);
+        trayR.receiveShadow = true;
         this.piecesGroup.add(trayR);
 
         this.setCamera(0, 8, 7);
@@ -795,8 +804,8 @@ class GameEngine {
         const finalX = baseX + (row === 0 ? -spacingX / 2 : spacingX / 2) * (side === -1 ? 1 : -1);
         const finalZ = baseZ + col * spacingZ;
 
-        // Move to tray level (just above tray surface)
-        this.animateMove(piece.mesh, finalX, gs.topY - 0.01, finalZ);
+        // Sit pieces exactly on top of the tray (tray top is at topY - 0.051 + 0.05 = topY - 0.001 approx)
+        this.animateMove(piece.mesh, finalX, gs.topY, finalZ);
         gs.captured[color]++;
     }
 
