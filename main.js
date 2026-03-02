@@ -370,8 +370,7 @@ class GameEngine {
         const password = document.getElementById('signup-password').value;
         const username = document.getElementById('signup-username').value;
 
-        // Perform the ACTUAL Sign Up here with all data gathered
-        const { error } = await this.supabase.auth.signUp({
+        const { data, error } = await this.supabase.auth.signUp({
             email: email,
             password: password,
             options: {
@@ -383,8 +382,15 @@ class GameEngine {
         if (error) {
             alert('Error: ' + error.message);
         } else {
-            // Success! Show the "Check your email" screen
-            this.showAuthStep('confirm');
+            // Smart Check: If session exists, user is already logged in (Confirm Email is OFF)
+            if (data?.session) {
+                alert('Account created and logged in! Welcome to BOARD3D.');
+                this.hideAuthModal();
+                window.location.reload();
+            } else {
+                // No session? Must be waiting for email confirmation
+                this.showAuthStep('confirm');
+            }
         }
     }
 
