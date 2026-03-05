@@ -793,7 +793,7 @@ class GameEngine {
             roughness: 0.8
         });
 
-        const tx = (side) => center.x + (side * 6.5) * cell + offsetX;
+        const tx = (side) => center.x + (side * 7.2) * cell + offsetX;
 
         // Black Tray (Left) - for captured Black pieces
         const trayL = new THREE.Mesh(trayGeom, trayMat);
@@ -822,7 +822,7 @@ class GameEngine {
         const spacingZ = gs.cell * 0.95;
         const spacingX = gs.cell * 1.0;
 
-        const baseX = gs.center.x + (side * 6.5) * gs.cell + (gs.offsetX || 0);
+        const baseX = gs.center.x + (side * 7.2) * gs.cell + (gs.offsetX || 0);
         const baseZ = gs.center.z - 3.4 * gs.cell + (gs.offsetZ || 0);
 
         const row = Math.floor(count / 8);
