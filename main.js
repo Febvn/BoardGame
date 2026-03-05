@@ -723,7 +723,7 @@ class GameEngine {
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
         this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, cell, center, topY, offsetX, offsetZ };
-        this.setCamera(0, 14, 10, 0, 16, 10);
+        this.setCamera(0, 18, 12, 0, 16, 10);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -793,7 +793,7 @@ class GameEngine {
             roughness: 0.75
         });
 
-        const tx = (side) => center.x + (side * (side === -1 ? 6.6 : 6.5)) * cell + offsetX;
+        const tx = (side) => center.x + (side * 8.5) * cell + offsetX;
 
         // Black Tray (Left) - for captured Black pieces
         const trayL = new THREE.Mesh(trayGeom, trayMat);
@@ -807,7 +807,7 @@ class GameEngine {
         trayR.receiveShadow = true;
         this.piecesGroup.add(trayR);
 
-        this.setCamera(0, 16, 12, 0, 18, 11);
+        this.setCamera(0, 22, 15, 0, 18, 11);
         this.updateTurnUI('White', '#f8fafc');
     }
 
@@ -822,7 +822,7 @@ class GameEngine {
         const spacingZ = gs.cell * 0.95;
         const spacingX = gs.cell * 1.0;
 
-        const baseX = gs.center.x + (side * (side === -1 ? 6.6 : 6.5)) * gs.cell + (gs.offsetX || 0);
+        const baseX = gs.center.x + (side * 8.5) * gs.cell + (gs.offsetX || 0);
         const baseZ = gs.center.z - 3.4 * gs.cell + (gs.offsetZ || 0);
 
         const row = Math.floor(count / 8);
@@ -955,7 +955,7 @@ class GameEngine {
             players[b.name] = { tokens, color: b.c };
         });
         this.gameState = { currentPlayer: 'White', gameOver: false, players, diceResult: null, rolled: false, topY, center };
-        this.setCamera(0, 20, 14, 0, 22, 13);
+        this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -986,7 +986,7 @@ class GameEngine {
             ],
             rolled: false,
         };
-        this.setCamera(0, 22, 16, 0, 24, 14);
+        this.setCamera(0, 26, 18, 0, 24, 14);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
