@@ -1246,17 +1246,32 @@ class GameEngine {
         if (!p) return [];
         const dirs = p.king ? [-1, 1] : (p.color === 'White' ? [-1] : [1]);
         const moves = [], jumps = [];
-        for (const dr of dirs) for (const dc of [-1, 1]) {
-            const nr = r + dr, nc = c + dc;
-            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                if (!b[nr][nc]) { if (!forceJumpOnly) moves.push({ r: nr, c: nc, jump: false }); }
-                else if (b[nr][nc].color !== p.color) {
-                    const jr = nr + dr, jc = nc + dc;
-                    if (jr >= 0 && jr < 8 && jc >= 0 && jc < 8 && !b[jr][jc]) jumps.push({ r: jr, c: jc, jump: true, captR: nr, captC: nc });
+
+        // Check for jumps (English Draughts: regular pieces jump only forward, Kings both ways)
+        const jumpDirs = p.king ? [-1, 1] : (p.color === 'White' ? [-1] : [1]);
+        for (const dr of jumpDirs) {
+            for (const dc of [-1, 1]) {
+                const nr = r + dr, nc = c + dc;
+                const jr = r + (dr * 2), jc = c + (dc * 2);
+                if (jr >= 0 && jr < 8 && jc >= 0 && jc < 8) {
+                    const victim = b[nr][nc];
+                    if (victim && victim.color !== p.color && !b[jr][jc]) {
+                        jumps.push({ r: jr, c: jc, jump: true, captR: nr, captC: nc });
+                    }
                 }
             }
         }
-        return jumps.length > 0 ? jumps : moves;
+
+        if (jumps.length > 0) return jumps;
+        if (forceJumpOnly) return [];
+
+        for (const dr of dirs) for (const dc of [-1, 1]) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !b[nr][nc]) {
+                moves.push({ r: nr, c: nc, jump: false });
+            }
+        }
+        return moves;
     }
 
     clickCheckers() {
@@ -1265,7 +1280,7 @@ class GameEngine {
         if (hitSq.length === 0 || gs.gameOver) return;
         const { row: r, col: c } = hitSq[0].object.userData;
 
-        // --- Forced Jump Rule: Check if ANY piece can jump ---
+        // Forced Jump Rule: Check if ANY piece can jump
         const anyJumpAvailable = () => {
             for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) {
                 if (b[ir][ic] && b[ir][ic].color === gs.currentPlayer) {
@@ -1280,30 +1295,62 @@ class GameEngine {
             const move = moves.find(m => m.r === r && m.c === c);
             if (move) {
                 const piece = b[gs.selected.r][gs.selected.c];
+                const isJump = move.jump;
                 const cell = gs.cell, cen = gs.center, topY = gs.topY, ox = gs.offsetX, oz = gs.offsetZ;
                 const tx = cen.x + (c - 3.5) * cell + ox, tz = cen.z + (r - 3.5) * cell + oz;
+
+                // Move logic
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
-                if (move.jump) { const cap = b[move.captR][move.captC]; this.piecesGroup.remove(cap.mesh); b[move.captR][move.captC] = null; }
+                if (isJump) {
+                    const cap = b[move.captR][move.captC];
+                    this.piecesGroup.remove(cap.mesh);
+                    if (cap.kingMesh) this.piecesGroup.remove(cap.kingMesh);
+                    b[move.captR][move.captC] = null;
+                }
+
                 this.animateMove(piece.mesh, tx, topY, tz, () => {
-                    if ((piece.color === 'White' && r === 0) || (piece.color === 'Black' && r === 7)) {
+                    if (piece.kingMesh) piece.kingMesh.position.set(tx, topY + 0.12, tz);
+
+                    // King Promotion
+                    let justPromoted = false;
+                    if (!piece.king && ((piece.color === 'White' && r === 0) || (piece.color === 'Black' && r === 7))) {
                         piece.king = true;
-                        piece.mesh.traverse(ch => { if (ch.isMesh) ch.material.emissive = new THREE.Color(0xffd700); ch.material.emissiveIntensity = 0.3; });
+                        justPromoted = true;
+                        const kMesh = piece.mesh.clone();
+                        kMesh.position.set(tx, topY + 0.12, tz);
+                        this.piecesGroup.add(kMesh);
+                        piece.kingMesh = kMesh;
                     }
-                    if (move.jump) {
-                        const extra = this.getCheckerMoves(r, c).filter(m => m.jump);
-                        if (extra.length > 0) { gs.selected = { r, c }; gs.mustJump = true; this.clearHighlights(); extra.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell + ox, topY, cen.z + (m.r - 3.5) * cell + oz, cell)); return; }
+
+                    // Multi-jump: Must continue if more jumps are possible
+                    if (isJump && !justPromoted) {
+                        const nextJumps = this.getCheckerMoves(r, c).filter(m => m.jump);
+                        if (nextJumps.length > 0) {
+                            gs.selected = { r, c }; gs.mustJump = true; this.clearHighlights();
+                            nextJumps.forEach(m => this.addHighlight(cen.x + (m.c - 3.5) * cell + ox, topY, cen.z + (m.r - 3.5) * cell + oz, cell));
+                            this.gameStatus.innerText = "Multi-jump available! Keep capturing.";
+                            return;
+                        }
                     }
+
                     this.clearHighlights(); gs.selected = null; gs.mustJump = false;
                     gs.currentPlayer = gs.currentPlayer === 'White' ? 'Black' : 'White';
-                    this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f5f5f7' : '#555555');
+                    this.updateTurnUI(gs.currentPlayer, gs.currentPlayer === 'White' ? '#f5f5f7' : '#111111');
                     this.checkCheckersWin();
                 });
             } else if (b[r][c] && b[r][c].color === gs.currentPlayer && !gs.mustJump) {
                 this.selectCheckerPiece(r, c);
             } else { if (!gs.mustJump) { this.clearHighlights(); gs.selected = null; } }
         } else if (b[r][c] && b[r][c].color === gs.currentPlayer) {
-            gs.mustJump = anyJumpAvailable();
-            this.selectCheckerPiece(r, c);
+            const hasCaneJump = anyJumpAvailable();
+            const moves = this.getCheckerMoves(r, c);
+            const canThisPieceJump = moves.some(m => m.jump);
+
+            if (hasCaneJump && !canThisPieceJump) {
+                this.gameStatus.innerText = "Forced Jump! You must capture.";
+                return;
+            }
+            if (moves.length > 0) this.selectCheckerPiece(r, c);
         }
     }
 
@@ -1311,7 +1358,10 @@ class GameEngine {
         const gs = this.gameState;
         this.clearHighlights(); gs.selected = { r, c };
         const moves = this.getCheckerMoves(r, c);
-        moves.forEach(m => this.addHighlight(gs.center.x + (m.c - 3.5) * gs.cell + gs.offsetX, gs.topY, gs.center.z + (m.r - 3.5) * gs.cell + gs.offsetZ, gs.cell));
+        // Only show jump moves if a jump is mandatory
+        const isJumpAvail = this.getCheckerMoves(r, c).some(m => m.jump);
+        const filtered = isJumpAvail ? moves.filter(m => m.jump) : moves;
+        filtered.forEach(m => this.addHighlight(gs.center.x + (m.c - 3.5) * gs.cell + gs.offsetX, gs.topY, gs.center.z + (m.r - 3.5) * gs.cell + gs.offsetZ, gs.cell));
     }
 
     checkCheckersWin() {
