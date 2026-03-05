@@ -80,10 +80,12 @@ class GameEngine {
         const fill = new THREE.DirectionalLight(0x818cf8, 0.4);
         fill.position.set(-5, 5, -10);
         this.scene.add(fill);
-        const floor = new THREE.Mesh(new THREE.CircleGeometry(25, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.15 }));
-        floor.rotation.x = -Math.PI / 2; floor.position.y = -0.51; floor.receiveShadow = true;
+        const tableSize = 40;
+        const tableThick = 0.5;
+        const floor = new THREE.Mesh(new THREE.BoxGeometry(tableSize, tableThick, tableSize), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.15 }));
+        floor.position.y = -0.5 - (tableThick / 2); floor.receiveShadow = true;
         this.scene.add(floor);
-        const grid = new THREE.PolarGridHelper(25, 16, 8, 64, 0x1e293b, 0x1e293b);
+        const grid = new THREE.GridHelper(tableSize, 24, 0x1e293b, 0x1e293b);
         grid.position.y = -0.5;
         this.scene.add(grid);
         window.addEventListener('resize', () => this.onResize());
