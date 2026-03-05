@@ -44,6 +44,7 @@ class GameEngine {
         this.isRolling = false;
         this.animating = false;
         this.isMobile = window.innerWidth <= 768;
+        this.isLandscape = window.innerWidth > window.innerHeight;
         this.supabase = supabase;
         this.user = null;
         this.init();
@@ -67,7 +68,7 @@ class GameEngine {
         this.controls.dampingFactor = 0.08;
         this.controls.maxPolarAngle = Math.PI / 2.1;
         this.controls.minDistance = 2;
-        this.controls.maxDistance = 20;
+        this.controls.maxDistance = 40;
         this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const sun = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -82,8 +83,13 @@ class GameEngine {
         const floor = new THREE.Mesh(new THREE.CircleGeometry(25, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.15 }));
         floor.rotation.x = -Math.PI / 2; floor.position.y = -0.51; floor.receiveShadow = true;
         this.scene.add(floor);
-        const grid = new THREE.GridHelper(40, 20, 0x1e293b, 0x1e293b); grid.position.y = -0.5; this.scene.add(grid);
+        const grid = new THREE.PolarGridHelper(25, 16, 8, 64, 0x1e293b, 0x1e293b);
+        grid.position.y = -0.5;
+        this.scene.add(grid);
         window.addEventListener('resize', () => this.onResize());
+        window.addEventListener('orientationchange', () => { setTimeout(() => this.onResize(), 150); });
+        // Prevent double-tap zoom on the canvas for better mobile gameplay
+        this.container.addEventListener('touchstart', e => { if (e.touches.length === 1 && e.cancelable) e.preventDefault(); }, { passive: false });
         this.container.addEventListener('pointerdown', e => this.onClick(e));
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
@@ -570,7 +576,27 @@ class GameEngine {
         }
     }
 
-    setCamera(x, y, z) { const s = this.isMobile ? 1.3 : 1; this.camera.position.set(x * s, y * s, z * s); this.camera.lookAt(0, 0, 0); this.controls.target.set(0, 0, 0); this.controls.update(); }
+    setCamera(x, y, z, mx, my, mz) {
+        // On mobile: use dedicated mobile camera if provided, else scale desktop
+        if (this.isMobile && mx !== undefined) {
+            this.camera.position.set(mx, my, mz);
+        } else {
+            const s = this.isMobile ? 1.3 : 1;
+            this.camera.position.set(x * s, y * s, z * s);
+        }
+
+        // Mobile-specific adjustments: Wider FOV (75) and slight target shift to avoid bottom UI
+        const isMob = this.isMobile;
+        this.camera.fov = isMob ? 75 : 50;
+        this.camera.updateProjectionMatrix();
+
+        const targetX = 0, targetY = 0, targetZ = 0;
+        const mobileTargetY = isMob ? 0.8 : 0; // Shift target up so board center is above the UI overlay
+
+        this.camera.lookAt(targetX, targetY + mobileTargetY, targetZ);
+        this.controls.target.set(targetX, targetY + mobileTargetY, targetZ);
+        this.controls.update();
+    }
 
     async loadGame(gt) {
         this.loadingText.innerText = `Loading ${gt}...`;
@@ -660,7 +686,8 @@ class GameEngine {
             bx.position.set(center.x + (i % 3 - 1) * cell, topY, center.z + (Math.floor(i / 3) - 1) * cell);
             bx.userData = { index: i }; this.scene.add(bx); this.hitboxes.push(bx);
         }
-        this.setCamera(0, 6, 5);
+        // Desktop: slight angle | Mobile: wider, pulled back significantly
+        this.setCamera(0, 6, 5, 0, 15, 9);
         this.updateTurnUI('X', '#f5f5f7');
     }
 
@@ -694,7 +721,7 @@ class GameEngine {
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
         this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, cell, center, topY, offsetX, offsetZ };
-        this.setCamera(0, 7, 6);
+        this.setCamera(0, 7, 6, 0, 16, 10);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -778,7 +805,7 @@ class GameEngine {
         trayR.receiveShadow = true;
         this.piecesGroup.add(trayR);
 
-        this.setCamera(0, 8, 7);
+        this.setCamera(0, 8, 7, 0, 18, 11);
         this.updateTurnUI('White', '#f8fafc');
     }
 
@@ -910,7 +937,7 @@ class GameEngine {
             players[b.name] = { tokens, color: b.c };
         });
         this.gameState = { currentPlayer: 'White', gameOver: false, players, diceResult: null, rolled: false, topY, center };
-        this.setCamera(0, 10, 6);
+        this.setCamera(0, 10, 6, 0, 22, 13);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -941,7 +968,7 @@ class GameEngine {
             ],
             rolled: false,
         };
-        this.setCamera(0, 10, 7);
+        this.setCamera(0, 10, 7, 0, 24, 14);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -965,7 +992,7 @@ class GameEngine {
             }
         });
         this.gameState = { currentPlayer: 'White', gameOver: false };
-        this.setCamera(0, 8, 8);
+        this.setCamera(0, 8, 8, 0, 20, 13);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -1005,7 +1032,7 @@ class GameEngine {
             piecesLeft: { White: 9, Black: 9 }, mills,
             piecesOnBoard: { White: 0, Black: 0 }
         };
-        this.setCamera(0, 8, 6);
+        this.setCamera(0, 8, 6, 0, 20, 11);
         this.updateTurnUI('White', '#f8fafc');
     }
 
@@ -1038,7 +1065,7 @@ class GameEngine {
         });
 
         this.gameState = { gameOver: true };
-        this.setCamera(0, 6, 8);
+        this.setCamera(0, 6, 8, 0, 10, 12);
         this.updateTurnUI('Collection', '#F5F5F7');
     }
 
@@ -1077,7 +1104,7 @@ class GameEngine {
         });
 
         this.gameState = { gameOver: true };
-        this.setCamera(0, 10, 12);
+        this.setCamera(0, 10, 12, 0, 15, 18);
         this.updateTurnUI('Collection', '#F5F5F7');
     }
 
@@ -1461,8 +1488,15 @@ class GameEngine {
 
     onResize() {
         this.isMobile = window.innerWidth <= 768;
+        this.isLandscape = window.innerWidth > window.innerHeight;
         const w = this.container.clientWidth, h = this.container.clientHeight;
-        if (w > 0 && h > 0) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
+        if (w > 0 && h > 0) {
+            this.camera.aspect = w / h;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(w, h);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
+        }
+        this._needsRender = true;
     }
 
     animate() {
