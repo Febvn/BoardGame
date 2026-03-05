@@ -890,14 +890,16 @@ class GameEngine {
                 for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) if (dr !== 0 || dc !== 0) if (canGo(r + dr, c + dc)) moves.push([r + dr, c + dc]);
                 // Castling
                 if (!ignoreCheck && !p.moved && !this.isAttacked(r, c, col)) {
-                    const checkCastling = (rookCol, path) => {
+                    const checkCastling = (rookCol, path, finalKingCol) => {
                         const rook = b[r][rookCol];
                         if (rook && rook.type === 'rock' && !rook.moved) {
-                            if (path.every(pc => isEmpty(r, pc) && !this.isAttacked(r, pc, col))) moves.push([r, path[1]]);
+                            if (path.every(pc => isEmpty(r, pc) && !this.isAttacked(r, pc, col))) {
+                                moves.push([r, finalKingCol]);
+                            }
                         }
                     };
-                    checkCastling(0, [1, 2, 3]); // Queen side
-                    checkCastling(7, [6, 5]); // King side
+                    checkCastling(0, [1, 2, 3], 2); // Queen side (King moves to col 2)
+                    checkCastling(7, [5, 6], 6);    // King side (King moves to col 6)
                 }
                 break;
             case 'knight': for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) if (canGo(r + dr, c + dc)) moves.push([r + dr, c + dc]); break;
@@ -908,11 +910,25 @@ class GameEngine {
         // Filter moves that leave King in check
         return moves.filter(([mr, mc]) => {
             const originalDest = b[mr][mc];
+            let epTarget = null;
+
+            // Simulate move
             b[mr][mc] = p; b[r][c] = null;
+
+            // Special simulation for En Passant capture
+            if (p.type === 'pawn' && mc !== c && !originalDest && gs.enPassant && gs.enPassant.r === r && gs.enPassant.c === mc) {
+                epTarget = b[r][mc];
+                b[r][mc] = null;
+            }
+
             let kr, kc;
             for (let ir = 0; ir < 8; ir++) for (let ic = 0; ic < 8; ic++) if (b[ir][ic] && b[ir][ic].color === col && b[ir][ic].type === 'king') { kr = ir; kc = ic; }
             const safe = !this.isAttacked(kr, kc, col);
+
+            // Restore state
             b[r][c] = p; b[mr][mc] = originalDest;
+            if (epTarget) b[r][mc] = epTarget;
+
             return safe;
         });
     }
@@ -1350,7 +1366,23 @@ class GameEngine {
                 b[r][c] = piece; b[gs.selected.r][gs.selected.c] = null;
 
                 // Promotion (Auto to Queen)
-                if (piece.type === 'pawn' && (r === 0 || r === 7)) piece.type = 'queen';
+                if (piece.type === 'pawn' && (r === 0 || r === 7)) {
+                    piece.type = 'queen';
+                    // Visual update: replace pawn mesh with queen mesh
+                    const qModel = this.models[`chess_queen_${piece.color.toLowerCase()}`].clone();
+                    qModel.scale.set(0.85, 0.85, 0.85);
+                    if (piece.color === 'Black') qModel.rotation.y = Math.PI;
+
+                    const oldMesh = piece.mesh;
+                    piece.mesh = qModel;
+                    this.piecesGroup.add(qModel);
+
+                    const tp = getPos(r, c, piece);
+                    qModel.position.set(tp.x, gs.topY, tp.z);
+                    qModel.traverse(ch => { if (ch.isMesh) { ch.castShadow = true; ch.material = ch.material.clone(); ch.material.color.set(piece.color === 'White' ? 0xffffff : 0x333333); } });
+
+                    setTimeout(() => this.piecesGroup.remove(oldMesh), 500);
+                }
 
                 // Update En Passant potential
                 gs.enPassant = (piece.type === 'pawn' && Math.abs(r - gs.selected.r) === 2) ? { r, c } : null;
