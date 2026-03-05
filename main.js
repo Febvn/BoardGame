@@ -788,7 +788,7 @@ class GameEngine {
         // Moved much further out (10 cells) to avoid colliding with board wide borders
         const trayGeom = new THREE.BoxGeometry(cell * 2.8, 0.2, cell * 8);
         const trayMat = new THREE.MeshStandardMaterial({
-            color: 0x3e2723, // Luxury Dark Mahogany/Wood color
+            color: 0x4e342e, // Matches the chessboard's brown
             metalness: 0.1,
             roughness: 0.75
         });
