@@ -689,7 +689,7 @@ class GameEngine {
             bx.userData = { index: i }; this.scene.add(bx); this.hitboxes.push(bx);
         }
         // Desktop: slight angle | Mobile: wider, pulled back significantly
-        this.setCamera(0, 6, 5, 0, 15, 9);
+        this.setCamera(0, 12, 8, 0, 15, 9);
         this.updateTurnUI('X', '#f5f5f7');
     }
 
@@ -723,7 +723,7 @@ class GameEngine {
             hb.userData = { type: 'sq', row: r, col: c }; this.scene.add(hb); this.hitboxes.push(hb);
         }
         this.gameState = { board, currentPlayer: 'White', gameOver: false, selected: null, cell, center, topY, offsetX, offsetZ };
-        this.setCamera(0, 7, 6, 0, 16, 10);
+        this.setCamera(0, 14, 10, 0, 16, 10);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -807,7 +807,7 @@ class GameEngine {
         trayR.receiveShadow = true;
         this.piecesGroup.add(trayR);
 
-        this.setCamera(0, 8, 7, 0, 18, 11);
+        this.setCamera(0, 16, 12, 0, 18, 11);
         this.updateTurnUI('White', '#f8fafc');
     }
 
@@ -939,7 +939,7 @@ class GameEngine {
             players[b.name] = { tokens, color: b.c };
         });
         this.gameState = { currentPlayer: 'White', gameOver: false, players, diceResult: null, rolled: false, topY, center };
-        this.setCamera(0, 10, 6, 0, 22, 13);
+        this.setCamera(0, 20, 14, 0, 22, 13);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -970,7 +970,7 @@ class GameEngine {
             ],
             rolled: false,
         };
-        this.setCamera(0, 10, 7, 0, 24, 14);
+        this.setCamera(0, 22, 16, 0, 24, 14);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -994,7 +994,7 @@ class GameEngine {
             }
         });
         this.gameState = { currentPlayer: 'White', gameOver: false };
-        this.setCamera(0, 8, 8, 0, 20, 13);
+        this.setCamera(0, 16, 16, 0, 20, 13);
         this.updateTurnUI('White', '#f5f5f7');
     }
 
@@ -1034,7 +1034,7 @@ class GameEngine {
             piecesLeft: { White: 9, Black: 9 }, mills,
             piecesOnBoard: { White: 0, Black: 0 }
         };
-        this.setCamera(0, 8, 6, 0, 20, 11);
+        this.setCamera(0, 16, 12, 0, 20, 11);
         this.updateTurnUI('White', '#f8fafc');
     }
 
@@ -1067,7 +1067,7 @@ class GameEngine {
         });
 
         this.gameState = { gameOver: true };
-        this.setCamera(0, 6, 8, 0, 10, 12);
+        this.setCamera(0, 12, 14, 0, 10, 12);
         this.updateTurnUI('Collection', '#F5F5F7');
     }
 
@@ -1106,7 +1106,7 @@ class GameEngine {
         });
 
         this.gameState = { gameOver: true };
-        this.setCamera(0, 10, 12, 0, 15, 18);
+        this.setCamera(0, 20, 20, 0, 15, 18);
         this.updateTurnUI('Collection', '#F5F5F7');
     }
 
