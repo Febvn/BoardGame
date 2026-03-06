@@ -1013,8 +1013,10 @@ class GameEngine {
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cell = Math.min(size.x, size.z) / 15;
-        const q = 4.5 * cell;
+        const cellBase = Math.min(size.x, size.z) / 15; // Locked scaling strictly for home bases
+        const cell = Math.min(size.x, size.z) / 13;     // Dynamic scaling for track calibration
+        const offsetX = 0.0;
+        const offsetZ = 0.0;
         // --- BASE POSITIONS (LOCKED BY USER) ---
         // These geometric starting positions are perfect and should never be altered
         const colors = [
@@ -1028,8 +1030,8 @@ class GameEngine {
         colors.forEach(b => {
             const tokens = [];
             b.starts.forEach((pos, i) => {
-                const wx = center.x + pos.c * cell;
-                const wz = center.z + pos.r * cell;
+                const wx = center.x + pos.c * cellBase;
+                const wz = center.z + pos.r * cellBase;
                 const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
@@ -1037,31 +1039,34 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Generates the 52 perimeter steps of the Ludo board clockwise
+        // Generates the 44 perimeter steps of the Ludo board clockwise (13x13 grid: 3x5 arms)
         const track = [];
-        for (let r = -2; r >= -7; r--) track.push({ c: -1, r: r });   // Up left side of TOP arm
-        track.push({ c: 0, r: -7 });                                  // Cross top edge
-        for (let r = -7; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side of TOP arm
-        for (let c = 2; c <= 7; c++) track.push({ c: c, r: -1 });     // Right top side of RIGHT arm
-        track.push({ c: 7, r: 0 });                                   // Cross right edge
-        for (let c = 7; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side of RIGHT arm
-        for (let r = 2; r <= 7; r++) track.push({ c: 1, r: r });      // Down right side of BOTTOM arm
-        track.push({ c: 0, r: 7 });                                   // Cross bottom edge
-        for (let r = 7; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side of BOTTOM arm
-        for (let c = -2; c >= -7; c--) track.push({ c: c, r: 1 });    // Left bottom side of LEFT arm
-        track.push({ c: -7, r: 0 });                                  // Cross left edge
-        for (let c = -7; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
+        for (let r = -2; r >= -6; r--) track.push({ c: -1, r: r });   // Up left side of TOP arm
+        track.push({ c: 0, r: -6 });                                  // Cross top edge
+        for (let r = -6; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side of TOP arm
+        for (let c = 2; c <= 6; c++) track.push({ c: c, r: -1 });     // Right top side of RIGHT arm
+        track.push({ c: 6, r: 0 });                                   // Cross right edge
+        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side of RIGHT arm
+        for (let r = 2; r <= 6; r++) track.push({ c: 1, r: r });      // Down right side of BOTTOM arm
+        track.push({ c: 0, r: 6 });                                   // Cross bottom edge
+        for (let r = 6; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side of BOTTOM arm
+        for (let c = -2; c >= -6; c--) track.push({ c: c, r: 1 });    // Left bottom side of LEFT arm
+        track.push({ c: -6, r: 0 });                                  // Cross left edge
+        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
 
         // Generate the 4 Home Columns (Safe path to center)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 4; i++) {
             homeColumns.Blue.push({ c: -6 + i, r: 0 });   // Left arm moving right
             homeColumns.Green.push({ c: 0, r: -6 + i });  // Top arm moving down
             homeColumns.Red.push({ c: 0, r: 6 - i });     // Bottom arm moving up
             homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
         }
 
-        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
+        this.gameState = {
+            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
+            topY, center, track, homeColumns, cell, offsetX, offsetZ
+        };
         this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('Blue', '#1d4ed8');
     }
@@ -1692,27 +1697,23 @@ class GameEngine {
         if (!token) return;
 
         // Entry points for each color (track index where they enter the board)
-        const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
-        const entryWorld = {
-            Blue: { x: -8.47, z: -1.60 },
-            Green: { x: 1.67, z: -8.35 },
-            Red: { x: -1.77, z: 8.47 },
-            Purple: { x: 8.58, z: 2.15 }
-        };
+        const entryIndex = { Blue: 40, Green: 7, Red: 29, Purple: 18 };
 
         if (token.inBase && gs.diceResult === 6) {
             // --- EXIT BASE: Move to entry position ---
             token.inBase = false;
             token.trackPos = entryIndex[gs.currentPlayer];
-            const ew = entryWorld[gs.currentPlayer];
-            this.animateMove(token.mesh, ew.x, gs.topY, ew.z, () => {
+            const dest = gs.track[token.trackPos];
+            const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+            const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+            this.animateMove(token.mesh, wx, gs.topY, wz, () => {
                 this.updateLudoStacking(gs);
                 this.advanceLudoTurn();
             });
         } else if (!token.inBase) {
             // --- MOVE ON TRACK ---
             const track = gs.track;
-            const totalTrack = track.length; // 52
+            const totalTrack = track.length; // 44
             const newPos = (token.trackPos + gs.diceResult) % totalTrack;
             token.trackPos = newPos;
             const dest = track[newPos];
@@ -1832,25 +1833,10 @@ class GameEngine {
         const r = gs.cell * 0.4; // Slightly smaller than the cell itself
         const y = gs.topY + 0.1;
 
-        // Visualize all 52 perimeter steps
+        // Visualize all 44 perimeter steps
         gs.track.forEach((dest, i) => {
             let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
-
-            // If it's an entry point, we use the specific custom world coordinates for precision
-            const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
-            const entryWorld = {
-                Blue: { x: -8.53, z: -1.98 },
-                Green: { x: 1.98, z: -8.53 },
-                Red: { x: -1.98, z: 8.53 },
-                Purple: { x: 8.58, z: 2.15 }
-            };
-            for (const color in entryIndex) {
-                if (i === entryIndex[color]) {
-                    wx = entryWorld[color].x;
-                    wz = entryWorld[color].z;
-                }
-            }
 
             pts.push(
                 new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
