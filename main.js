@@ -637,11 +637,14 @@ class GameEngine {
                 // placePiece handles shadows and initial surface placement
                 this.activeDice = this.placePiece('dice', center.x, surfaceY, center.z, 0xffffff, scaleBase);
 
-                // Calculate and store exact floorY so animation doesn't float/clip
+                // Store initial default state for return animation
+                this.gameState.diceHomePos = new THREE.Vector3(center.x, 0, center.z);
                 this.activeDice.updateMatrixWorld(true);
                 const diceBox = new THREE.Box3().setFromObject(this.activeDice);
                 this.gameState.diceFloorY = surfaceY + (this.activeDice.position.y - diceBox.min.y);
-                this.activeDice.position.y = this.gameState.diceFloorY;
+                this.gameState.diceHomePos.y = this.gameState.diceFloorY;
+
+                this.activeDice.position.copy(this.gameState.diceHomePos);
             }
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
 
@@ -1220,26 +1223,40 @@ class GameEngine {
             this._needsRender = true; // Force render repaint for the animation frame
             if (t < 2.5) requestAnimationFrame(anim);
             else {
-                // Snap to board floor when finished
+                // Snap to board floor
                 dice.position.y = floorY;
 
-                // MAP RESULT TO 3D ROTATION (Standard Dice Face Orientation)
+                // --- ACCURATE 3D FACE MAPPING ---
                 const h = Math.PI / 2;
                 const rotations = {
-                    1: { x: 0, z: 0 },
-                    6: { x: Math.PI, z: 0 },
-                    2: { x: -h, z: 0 },
-                    5: { x: h, z: 0 },
-                    3: { x: 0, z: h },
-                    4: { x: 0, z: -h }
+                    1: { x: 0, z: 0 },         // Top
+                    6: { x: Math.PI, z: 0 },    // Bottom
+                    2: { x: h, z: 0 },          // Front
+                    5: { x: -h, z: 0 },         // Back
+                    3: { x: 0, z: -h },         // Left
+                    4: { x: 0, z: h }           // Right
                 };
                 const rot = rotations[result];
                 dice.rotation.set(rot.x, 0, rot.z);
 
-                this._needsRender = true;
-                this.diceValueDisp.innerText = result;
-                this.isRolling = false;
-                this.onDiceResult(result);
+                // ANIMATE RETURN TO DEFAULT POSITION
+                let rt = 0;
+                const homePos = this.gameState.diceHomePos;
+                const startPos = dice.position.clone();
+
+                const returnAnim = () => {
+                    rt += 0.05;
+                    const lerp = Math.min(1, rt);
+                    dice.position.lerpVectors(startPos, homePos, lerp);
+                    this._needsRender = true;
+                    if (rt < 1) requestAnimationFrame(returnAnim);
+                    else {
+                        this.diceValueDisp.innerText = result;
+                        this.isRolling = false;
+                        this.onDiceResult(result);
+                    }
+                };
+                setTimeout(() => returnAnim(), 800); // Wait 800ms so user sees the result first
             }
         };
         anim();
