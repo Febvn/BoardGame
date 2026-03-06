@@ -1271,7 +1271,7 @@ class GameEngine {
                 const r = ((pt.z - center.z) / cell).toFixed(2);
 
                 // Show a prompt so the user can easily copy the coordinates
-                const copyText = `{ c: ${c}, r: ${r} }`;
+                const copyText = `{ c: ${c}, r: ${r} } | world: { x: ${pt.x.toFixed(2)}, z: ${pt.z.toFixed(2)} }`;
                 prompt("Ludo Coordinate Locked! You can copy it below:", copyText);
             }
         }
