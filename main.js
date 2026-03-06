@@ -779,11 +779,15 @@ class GameEngine {
         const types = ['pawn', 'rock', 'knight', 'bishop', 'queen', 'king'];
         for (const col of ['white', 'black']) for (const t of types) this.models[`chess_${t}_${col}`] = await load(`Pieces/Chess/chess-${t}-${col}.gltf`);
         const { size, center } = this.getBoardMetrics(this.board);
+
+        // FIND EXACT BOARD SURFACE using Raycasting (Collision prevention)
+        const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
+        const hits = ray.intersectObject(this.board, true);
+        const topY = (hits.length > 0) ? (hits[0].point.y + 0.01) : (center.y + size.y / 2 + 0.01);
+
         const cell = Math.min(size.x, size.z) * 0.78 / 8; // Calibrated scale
         const offsetX = 0.12; // Adjusted based on visual analysis
         const offsetZ = -0.12; // Adjusted based on visual analysis
-        const topY = center.y + size.y / 2 + 0.01;
-
         const order = ['rock', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rock'];
         // board[r][c] = null | { type, color, mesh }
         const board = Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -967,9 +971,13 @@ class GameEngine {
         this.models.token = await load('Pieces/Token/token-v1-white.gltf');
         this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
+
+        // FIND EXACT BOARD SURFACE using Raycasting (Collision prevention)
+        const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
+        const hits = ray.intersectObject(this.board, true);
+        const topY = (hits.length > 0) ? (hits[0].point.y + 0.01) : (center.y + size.y / 2 + 0.02);
         const cell = Math.min(size.x, size.z) / 15;
         const q = 4.5 * cell; // Distance from board center to base center
-        const topY = center.y + size.y / 2 + 0.02;
         const colors = [
             { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
             { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
