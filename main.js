@@ -94,6 +94,7 @@ class GameEngine {
         this.container.addEventListener('touchstart', e => { if (e.touches.length === 1 && e.cancelable) e.preventDefault(); }, { passive: false });
         this.container.addEventListener('pointerdown', e => this.onClick(e));
         this.container.addEventListener('pointermove', e => this.onPointerMove(e));
+        this.container.addEventListener('dblclick', e => this.onDoubleClick(e));
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
         this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
@@ -1249,6 +1250,29 @@ class GameEngine {
                 const c = Math.round((pt.x - center.x) / cell);
                 const r = Math.round((pt.z - center.z) / cell);
                 this.gameStatus.innerText = `Map Crosshair => x/c: ${c}, z/r: ${r} | World: (${pt.x.toFixed(2)}, ${pt.z.toFixed(2)})`;
+            }
+        }
+    }
+
+    onDoubleClick(e) {
+        if (this.currentGame !== 'ludo' || !this.gameState.cell) return;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+
+        if (this.board) {
+            const hits = this.raycaster.intersectObject(this.board, true);
+            if (hits.length > 0) {
+                const pt = hits[0].point;
+                const cell = this.gameState.cell;
+                const center = this.gameState.center;
+                const c = Math.round((pt.x - center.x) / cell);
+                const r = Math.round((pt.z - center.z) / cell);
+
+                // Show a prompt so the user can easily copy the coordinates
+                const copyText = `{ c: ${c}, r: ${r} }`;
+                prompt("Ludo Coordinate Locked! You can copy it below:", copyText);
             }
         }
     }
