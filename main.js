@@ -48,7 +48,20 @@ class GameEngine {
         this.supabase = supabase;
         this.user = null;
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'g') this.toggleDebugGrid();
+            const k = e.key.toLowerCase();
+            if (k === 'g') this.toggleDebugGrid();
+
+            // LIVE CALIBRATION CONTROLS (Only if in Ludo and Grid is visible)
+            if (this.currentGame === 'ludo' && this.debugGrid) {
+                const gs = this.gameState;
+                const step = 0.01;
+                if (e.key === 'ArrowUp') { gs.offsetZ = (gs.offsetZ || 0) - step; this.updateLudoCalibration(); }
+                if (e.key === 'ArrowDown') { gs.offsetZ = (gs.offsetZ || 0) + step; this.updateLudoCalibration(); }
+                if (e.key === 'ArrowLeft') { gs.offsetX = (gs.offsetX || 0) - step; this.updateLudoCalibration(); }
+                if (e.key === 'ArrowRight') { gs.offsetX = (gs.offsetX || 0) + step; this.updateLudoCalibration(); }
+                if (k === '[') { gs.cell -= step; this.updateLudoCalibration(); }
+                if (k === ']') { gs.cell += step; this.updateLudoCalibration(); }
+            }
         });
 
         this.init();
@@ -1700,8 +1713,8 @@ class GameEngine {
             const newPos = (token.trackPos + gs.diceResult) % totalTrack;
             token.trackPos = newPos;
             const dest = track[newPos];
-            const wx = gs.center.x + dest.c * gs.cell;
-            const wz = gs.center.z + dest.r * gs.cell;
+            const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+            const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
             this.animateMove(token.mesh, wx, gs.topY, wz, () => {
                 this.updateLudoStacking(gs);
                 this.advanceLudoTurn();
@@ -1750,8 +1763,8 @@ class GameEngine {
             const idx = parseInt(key);
             const dest = gs.track[idx];
             trackBasePos[key] = {
-                x: gs.center.x + dest.c * gs.cell,
-                z: gs.center.z + dest.r * gs.cell
+                x: gs.center.x + dest.c * gs.cell + (gs.offsetX || 0),
+                z: gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0)
             };
         }
 
@@ -1793,31 +1806,49 @@ class GameEngine {
         if (this.debugGrid) {
             this.scene.remove(this.debugGrid);
             this.debugGrid = null;
-            console.log("Debug Grid Disabled");
             return;
         }
 
         const gs = this.gameState;
         if (!gs || !gs.cell) return;
 
-        const size = 15; // Ludo is 15x15 grid
-        const half = (size * gs.cell) / 2;
-        const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 });
-        const points = [];
-
-        // Draw vertical and horizontal lines representing the grid edges
-        for (let i = 0; i <= size; i++) {
-            const pos = -half + i * gs.cell;
-            // Rows
-            points.push(new THREE.Vector3(-half, gs.topY + 0.05, pos), new THREE.Vector3(half, gs.topY + 0.05, pos));
-            // Columns
-            points.push(new THREE.Vector3(pos, gs.topY + 0.05, -half), new THREE.Vector3(pos, gs.topY + 0.05, half));
-        }
-
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 });
+        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
         this.debugGrid = new THREE.LineSegments(geometry, material);
         this.scene.add(this.debugGrid);
-        console.log("Debug Grid Enabled (15x15). Cell Size:", gs.cell);
+        this.updateLudoCalibration();
+    }
+
+    updateLudoCalibration() {
+        const gs = this.gameState;
+        if (!this.debugGrid || !gs.cell) return;
+
+        // Update Grid Mesh
+        const size = 15;
+        const half = (size * gs.cell) / 2;
+        const pts = [];
+        const ox = gs.offsetX || 0, oz = gs.offsetZ || 0;
+
+        for (let i = 0; i <= size; i++) {
+            const pos = -half + i * gs.cell;
+            pts.push(new THREE.Vector3(-half + ox, gs.topY + 0.05, pos + oz), new THREE.Vector3(half + ox, gs.topY + 0.05, pos + oz));
+            pts.push(new THREE.Vector3(pos + ox, gs.topY + 0.05, -half + oz), new THREE.Vector3(pos + ox, gs.topY + 0.05, half + oz));
+        }
+        this.debugGrid.geometry.setFromPoints(pts);
+
+        // Snap all track tokens to the new grid immediately for visual feedback
+        for (const name of Object.keys(gs.players)) {
+            gs.players[name].tokens.forEach(t => {
+                if (!t.inBase && t.trackPos !== undefined) {
+                    const dest = gs.track[t.trackPos];
+                    t.mesh.position.x = gs.center.x + dest.c * gs.cell + ox;
+                    t.mesh.position.z = gs.center.z + dest.r * gs.cell + oz;
+                }
+            });
+        }
+        this.updateLudoStacking(gs);
+        console.log(`CALIBRATION: Cell=${gs.cell.toFixed(3)}, OffsetX=${ox.toFixed(3)}, OffsetZ=${oz.toFixed(3)}`);
+        this._needsRender = true;
     }
 
     clickMill() {
