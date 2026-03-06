@@ -1238,31 +1238,35 @@ class GameEngine {
             this._needsRender = true; // Force render repaint for the animation frame
             if (t < 2.5) requestAnimationFrame(anim);
             else {
-                // Snap to board floor
-                dice.position.y = floorY;
-
                 // --- ACCURATE 3D FACE MAPPING ---
                 const h = Math.PI / 2;
                 const rotations = {
                     1: { x: 0, z: 0 },         // Top
                     6: { x: Math.PI, z: 0 },    // Bottom
-                    2: { x: -h, z: 0 },         // Front (Correction: flipped with 5)
-                    5: { x: h, z: 0 },          // Back (Correction: flipped with 2)
+                    2: { x: -h, z: 0 },         // Front
+                    5: { x: h, z: 0 },          // Back
                     3: { x: 0, z: -h },         // Left
                     4: { x: 0, z: h }           // Right
                 };
                 const rot = rotations[result];
                 dice.rotation.set(rot.x, 0, rot.z);
 
+                // RECALCULATE Y after rotation change — bounding box shifts with rotation!
+                dice.position.y = 0;
+                dice.updateMatrixWorld(true);
+                const bb = new THREE.Box3().setFromObject(dice);
+                const homeY = this.gameState.diceHomePos.y;
+                dice.position.y = homeY + (dice.position.y - bb.min.y);
+
                 // ANIMATE RETURN TO DEFAULT POSITION
                 let rt = 0;
-                const homePos = this.gameState.diceHomePos;
+                const finalHomePos = new THREE.Vector3(this.gameState.diceHomePos.x, dice.position.y, this.gameState.diceHomePos.z);
                 const startPos = dice.position.clone();
 
                 const returnAnim = () => {
                     rt += 0.05;
                     const lerp = Math.min(1, rt);
-                    dice.position.lerpVectors(startPos, homePos, lerp);
+                    dice.position.lerpVectors(startPos, finalHomePos, lerp);
                     this._needsRender = true;
                     if (rt < 1) requestAnimationFrame(returnAnim);
                     else {
