@@ -1241,12 +1241,12 @@ class GameEngine {
                 // --- ACCURATE 3D FACE MAPPING ---
                 const h = Math.PI / 2;
                 const rotations = {
-                    1: { x: 0, z: 0 },         // Top
-                    6: { x: Math.PI, z: 0 },    // Bottom
-                    2: { x: -h, z: 0 },         // Front
-                    5: { x: h, z: 0 },          // Back
-                    3: { x: 0, z: -h },         // Left
-                    4: { x: 0, z: h }           // Right
+                    1: { x: 0, z: 0 },         // Top (default)
+                    6: { x: Math.PI, z: 0 },    // Bottom (flip)
+                    3: { x: -h, z: 0 },         // X-axis: face 3
+                    4: { x: h, z: 0 },          // X-axis: face 4
+                    5: { x: 0, z: -h },         // Z-axis: face 5
+                    2: { x: 0, z: h }           // Z-axis: face 2
                 };
                 const rot = rotations[result];
                 dice.rotation.set(rot.x, 0, rot.z);
