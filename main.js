@@ -1231,8 +1231,8 @@ class GameEngine {
                 const rotations = {
                     1: { x: 0, z: 0 },         // Top
                     6: { x: Math.PI, z: 0 },    // Bottom
-                    2: { x: h, z: 0 },          // Front
-                    5: { x: -h, z: 0 },         // Back
+                    2: { x: -h, z: 0 },         // Front (Correction: flipped with 5)
+                    5: { x: h, z: 0 },          // Back (Correction: flipped with 2)
                     3: { x: 0, z: -h },         // Left
                     4: { x: 0, z: h }           // Right
                 };
