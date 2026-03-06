@@ -1013,9 +1013,8 @@ class GameEngine {
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cell = 1.145;
-        const offsetX = -0.06;
-        const offsetZ = -0.38;
+        const cell = Math.min(size.x, size.z) / 15;
+        const q = 4.5 * cell;
         const colors = [
             { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
             { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
@@ -1027,8 +1026,8 @@ class GameEngine {
         colors.forEach(b => {
             const tokens = [];
             b.starts.forEach((pos, i) => {
-                const wx = center.x + pos.c * cell + offsetX;
-                const wz = center.z + pos.r * cell + offsetZ;
+                const wx = center.x + pos.c * cell;
+                const wz = center.z + pos.r * cell;
                 const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
@@ -1060,10 +1059,7 @@ class GameEngine {
             homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
         }
 
-        this.gameState = {
-            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
-            topY, center, track, homeColumns, cell, offsetX, offsetZ
-        };
+        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
         this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('Blue', '#1d4ed8');
     }
@@ -1695,12 +1691,12 @@ class GameEngine {
 
         // Entry points for each color (track index where they enter the board)
         const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
-        // Entry world coords (precise for each color based on calibration)
+        // Entry world coords (precise for each color)
         const entryWorld = {
-            Blue: { x: -8.53, z: -1.98 },
-            Green: { x: 1.98, z: -8.53 },
-            Red: { x: -1.98, z: 8.53 },
-            Purple: { x: 8.53, z: 1.98 }
+            Blue: { x: -8.47, z: -1.60 },
+            Green: { x: 1.67, z: -8.35 },
+            Red: { x: -1.77, z: 8.47 },
+            Purple: { x: 8.46, z: 1.80 }
         };
 
         if (token.inBase && gs.diceResult === 6) {
