@@ -1173,10 +1173,14 @@ class GameEngine {
         const center = this.gameState.center || { x: 0, z: 0 };
         const topY = this.gameState.topY || 0.5;
 
-        dice.position.set(center.x, topY + 4, center.z);
         // Make the dice bigger depending on the game so it's clearly visible in the middle
         const scaleBase = this.currentGame === 'ludo' ? 1.8 : 0.8;
         dice.scale.set(scaleBase, scaleBase, scaleBase);
+
+        // Prevent glitching: Ensure the dice origin (center) rests exactly on top of the board, not inside it
+        const floorY = topY + (scaleBase * 0.5);
+        dice.position.set(center.x, floorY + 5, center.z);
+
         this.scene.add(dice);
 
         const result = Math.floor(Math.random() * 6) + 1;
@@ -1184,7 +1188,8 @@ class GameEngine {
         const anim = () => {
             t += 0.05; // Slightly slower rotation for dramatic effect
             dice.rotation.x += 0.35; dice.rotation.z += 0.25;
-            dice.position.y = topY + Math.abs(Math.sin(t * 6)) * Math.max(0, 4 - t);
+            // Bounce calculation mapping safely above floorY
+            dice.position.y = floorY + Math.abs(Math.sin(t * 6)) * Math.max(0, 4 - t);
             if (t < 2.5) requestAnimationFrame(anim);
             else {
                 this.scene.remove(dice);
