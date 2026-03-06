@@ -1190,9 +1190,11 @@ class GameEngine {
             dice.rotation.x += 0.35; dice.rotation.z += 0.25;
             // Bounce calculation mapping safely above floorY
             dice.position.y = floorY + Math.abs(Math.sin(t * 6)) * Math.max(0, 4 - t);
+            this._needsRender = true; // Force render repaint for the animation frame
             if (t < 2.5) requestAnimationFrame(anim);
             else {
                 this.scene.remove(dice);
+                this._needsRender = true;
                 this.diceValueDisp.innerText = result;
                 this.isRolling = false;
                 this.onDiceResult(result);
