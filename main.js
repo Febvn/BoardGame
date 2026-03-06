@@ -962,7 +962,57 @@ class GameEngine {
             });
             players[b.name] = { tokens, color: b.c };
         });
-        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center };
+
+        // --- PATH MAPPING & VISUALIZATION ---
+        // Generates the 52 perimeter steps of the Ludo board clockwise
+        const track = [];
+        for (let r = -2; r >= -7; r--) track.push({ c: -1, r: r });   // Up left side of TOP arm
+        track.push({ c: 0, r: -7 });                                  // Cross top edge
+        for (let r = -7; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side of TOP arm
+        for (let c = 2; c <= 7; c++) track.push({ c: c, r: -1 });     // Right top side of RIGHT arm
+        track.push({ c: 7, r: 0 });                                   // Cross right edge
+        for (let c = 7; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side of RIGHT arm
+        for (let r = 2; r <= 7; r++) track.push({ c: 1, r: r });      // Down right side of BOTTOM arm
+        track.push({ c: 0, r: 7 });                                   // Cross bottom edge
+        for (let r = 7; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side of BOTTOM arm
+        for (let c = -2; c >= -7; c--) track.push({ c: c, r: 1 });    // Left bottom side of LEFT arm
+        track.push({ c: -7, r: 0 });                                  // Cross left edge
+        for (let c = -7; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
+
+        // Draw small debug spheres on the perimeter track
+        track.forEach((pos, i) => {
+            const geom = new THREE.SphereGeometry(cell * 0.15, 8, 8);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const m = new THREE.Mesh(geom, mat);
+            // Every 13th step represents roughly the start of a new quadrant, let's make it yellow to differentiate
+            if (i % 13 === 0) mat.color.setHex(0xffaa00);
+
+            m.position.set(center.x + pos.c * cell, topY + 0.05, center.z + pos.r * cell);
+            this.scene.add(m);
+        });
+
+        // Generate and draw the 4 Home Columns (Safe path to center)
+        const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
+        for (let i = 1; i <= 5; i++) {
+            homeColumns.Blue.push({ c: -6 + i, r: 0 });   // Left arm moving right
+            homeColumns.Green.push({ c: 0, r: -6 + i });  // Top arm moving down
+            homeColumns.Red.push({ c: 0, r: 6 - i });     // Bottom arm moving up
+            homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
+        }
+
+        // Draw the home columns in their respective colors
+        Object.keys(homeColumns).forEach(playerColor => {
+            const hexColor = colors.find(c => c.name === playerColor).c;
+            homeColumns[playerColor].forEach(pos => {
+                const geom = new THREE.SphereGeometry(cell * 0.2, 8, 8);
+                const mat = new THREE.MeshBasicMaterial({ color: hexColor });
+                const m = new THREE.Mesh(geom, mat);
+                m.position.set(center.x + pos.c * cell, topY + 0.05, center.z + pos.r * cell);
+                this.scene.add(m);
+            });
+        });
+
+        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
         this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('Blue', '#1d4ed8');
     }
