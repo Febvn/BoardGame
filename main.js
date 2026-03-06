@@ -994,13 +994,13 @@ class GameEngine {
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cell = Math.min(size.x, size.z) / 15;
-        const q = 4.5 * cell; // Distance from board center to base center
+        const cell = Math.min(size.x, size.z) / 16.5; // Calibrated: shrinks the grid to account for board frame
+        const q = 4.5 * cell;
         const colors = [
-            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
-            { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
-            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6.30, r: 5.02 }, { c: -5.02, r: 5.02 }, { c: -6.30, r: 6.30 }, { c: -5.02, r: 6.30 }] },
-            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5.02, r: 5.02 }, { c: 6.30, r: 5.02 }, { c: 5.02, r: 6.30 }, { c: 6.30, r: 6.30 }] }
+            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.40, r: -6.40 }, { c: -5.10, r: -6.40 }, { c: -6.40, r: -5.10 }, { c: -5.10, r: -5.10 }] },
+            { c: 0x15803d, name: 'Green', starts: [{ c: 5.10, r: -6.40 }, { c: 6.40, r: -6.40 }, { c: 5.10, r: -5.10 }, { c: 6.40, r: -5.10 }] },
+            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6.40, r: 5.10 }, { c: -5.10, r: 5.10 }, { c: -6.40, r: 6.40 }, { c: -5.10, r: 6.40 }] },
+            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5.10, r: 5.10 }, { c: 6.40, r: 5.10 }, { c: 5.10, r: 6.40 }, { c: 6.40, r: 6.40 }] }
         ];
 
         const players = {};
@@ -1751,13 +1751,13 @@ class GameEngine {
             };
         }
 
-        // Formation offsets for stacking
-        const d = 0.35; // half-spacing for the grid
+        // Formation offsets for stacking (Centered grid)
+        const d = 0.22; // More compact spacing to keep tokens inside the square
         const formations = {
             1: [[0, 0]],
             2: [[-d, 0], [d, 0]],
             3: [[0, -d], [-d, d], [d, d]],
-            4: [[-d, -d], [d, -d], [-d, d], [d, d]]  // [::] pattern
+            4: [[-d, -d], [d, -d], [-d, d], [d, d]]  // [::] pattern centered
         };
 
         // Apply stacking per group
