@@ -1825,20 +1825,39 @@ class GameEngine {
         const gs = this.gameState;
         if (!this.debugGrid || !gs.cell) return;
 
-        // Draw ONLY ONE RED RECTANGLE at Blue's entry point (Anchoring)
-        const trackIdx = 47; // Blue entry square
-        const dest = gs.track[trackIdx];
-        const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
-        const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
-        const r = gs.cell / 2; // half cell size
-        const y = gs.topY + 0.1; // lift slightly above board
+        // Draw a RED SQUARE at EVERY landing spot on the track
+        const pts = [];
+        const r = gs.cell * 0.4; // Slightly smaller than the cell itself
+        const y = gs.topY + 0.1;
 
-        const pts = [
-            new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
-            new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
-            new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
-            new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
-        ];
+        // Visualize all 52 perimeter steps
+        gs.track.forEach((dest, i) => {
+            let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+            let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+
+            // If it's an entry point, we use the specific custom world coordinates for precision
+            const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
+            const entryWorld = {
+                Blue: { x: -8.53, z: -1.98 },
+                Green: { x: 1.98, z: -8.53 },
+                Red: { x: -1.98, z: 8.53 },
+                Purple: { x: 8.58, z: 2.15 }
+            };
+            for (const color in entryIndex) {
+                if (i === entryIndex[color]) {
+                    wx = entryWorld[color].x;
+                    wz = entryWorld[color].z;
+                }
+            }
+
+            pts.push(
+                new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
+                new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
+                new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
+                new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
+            );
+        });
+
         this.debugGrid.geometry.setFromPoints(pts);
 
         // Snap any tokens on track to visual center immediately
