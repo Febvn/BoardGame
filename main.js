@@ -1039,20 +1039,25 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Generates the 44 perimeter steps of the Ludo board clockwise (13x13 grid: 3x5 arms)
+        // --- PATH MAPPING & VISUALIZATION ---
+        // Generates the 48 perimeter steps of the Ludo board clockwise (13x13 grid: 3x5 arms + corners)
         const track = [];
-        for (let r = -2; r >= -6; r--) track.push({ c: -1, r: r });   // Up left side of TOP arm
-        track.push({ c: 0, r: -6 });                                  // Cross top edge
-        for (let r = -6; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side of TOP arm
-        for (let c = 2; c <= 6; c++) track.push({ c: c, r: -1 });     // Right top side of RIGHT arm
-        track.push({ c: 6, r: 0 });                                   // Cross right edge
-        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side of RIGHT arm
-        for (let r = 2; r <= 6; r++) track.push({ c: 1, r: r });      // Down right side of BOTTOM arm
-        track.push({ c: 0, r: 6 });                                   // Cross bottom edge
-        for (let r = 6; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side of BOTTOM arm
-        for (let c = -2; c >= -6; c--) track.push({ c: c, r: 1 });    // Left bottom side of LEFT arm
-        track.push({ c: -6, r: 0 });                                  // Cross left edge
-        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
+        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // Left arm top side (0..4)
+        track.push({ c: -1, r: -1 });                                 // Corner 1 (5)
+        for (let r = -2; r >= -6; r--) track.push({ c: -1, r: r });   // Top arm left side (6..10)
+        track.push({ c: 0, r: -6 });                                  // Top edge (11)
+        for (let r = -6; r <= -2; r++) track.push({ c: 1, r: r });    // Top arm right side (12..16)
+        track.push({ c: 1, r: -1 });                                  // Corner 2 (17)
+        for (let c = 2; c <= 6; c++) track.push({ c: c, r: -1 });     // Right arm top side (18..22)
+        track.push({ c: 6, r: 0 });                                   // Right edge (23)
+        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // Right arm bottom side (24..28)
+        track.push({ c: 1, r: 1 });                                   // Corner 3 (29)
+        for (let r = 2; r <= 6; r++) track.push({ c: 1, r: r });      // Bottom arm right side (30..34)
+        track.push({ c: 0, r: 6 });                                   // Bottom edge (35)
+        for (let r = 6; r >= 2; r--) track.push({ c: -1, r: r });     // Bottom arm left side (36..40)
+        track.push({ c: -1, r: 1 });                                  // Corner 4 (41)
+        for (let c = -2; c >= -6; c--) track.push({ c: c, r: 1 });    // Left arm bottom side (42..46)
+        track.push({ c: -6, r: 0 });                                  // Left edge (47)
 
         // Generate the 4 Home Columns (Safe path to center)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
@@ -1697,7 +1702,7 @@ class GameEngine {
         if (!token) return;
 
         // Entry points for each color (track index where they enter the board)
-        const entryIndex = { Blue: 40, Green: 7, Red: 29, Purple: 18 };
+        const entryIndex = { Blue: 1, Green: 13, Red: 37, Purple: 25 };
 
         if (token.inBase && gs.diceResult === 6) {
             // --- EXIT BASE: Move to entry position ---
@@ -1713,7 +1718,7 @@ class GameEngine {
         } else if (!token.inBase) {
             // --- MOVE ON TRACK ---
             const track = gs.track;
-            const totalTrack = track.length; // 44
+            const totalTrack = track.length; // 48
             const newPos = (token.trackPos + gs.diceResult) % totalTrack;
             token.trackPos = newPos;
             const dest = track[newPos];
@@ -1833,7 +1838,7 @@ class GameEngine {
         const r = gs.cell * 0.4; // Slightly smaller than the cell itself
         const y = gs.topY + 0.1;
 
-        // Visualize all 44 perimeter steps
+        // Visualize all 48 perimeter steps
         gs.track.forEach((dest, i) => {
             let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
