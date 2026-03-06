@@ -47,6 +47,10 @@ class GameEngine {
         this.isLandscape = window.innerWidth > window.innerHeight;
         this.supabase = supabase;
         this.user = null;
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'g') this.toggleDebugGrid();
+        });
+
         this.init();
         this.checkUserSession();
     }
@@ -1783,6 +1787,37 @@ class GameEngine {
             });
         }
         this._needsRender = true;
+    }
+
+    toggleDebugGrid() {
+        if (this.debugGrid) {
+            this.scene.remove(this.debugGrid);
+            this.debugGrid = null;
+            console.log("Debug Grid Disabled");
+            return;
+        }
+
+        const gs = this.gameState;
+        if (!gs || !gs.cell) return;
+
+        const size = 15; // Ludo is 15x15 grid
+        const half = (size * gs.cell) / 2;
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 });
+        const points = [];
+
+        // Draw vertical and horizontal lines representing the grid edges
+        for (let i = 0; i <= size; i++) {
+            const pos = -half + i * gs.cell;
+            // Rows
+            points.push(new THREE.Vector3(-half, gs.topY + 0.05, pos), new THREE.Vector3(half, gs.topY + 0.05, pos));
+            // Columns
+            points.push(new THREE.Vector3(pos, gs.topY + 0.05, -half), new THREE.Vector3(pos, gs.topY + 0.05, half));
+        }
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        this.debugGrid = new THREE.LineSegments(geometry, material);
+        this.scene.add(this.debugGrid);
+        console.log("Debug Grid Enabled (15x15). Cell Size:", gs.cell);
     }
 
     clickMill() {
