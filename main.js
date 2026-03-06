@@ -1014,16 +1014,16 @@ class GameEngine {
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
         const cellBase = Math.min(size.x, size.z) / 15; // Locked scaling strictly for home bases
-        const cell = Math.min(size.x, size.z) / 15;     // Standard Ludo: 15x15 grid, track extends ±6
+        const cell = Math.min(size.x, size.z) / 7.5;     // Extra wide padding for short-arm track
         const offsetX = 0.0;
         const offsetZ = 0.0;
-        // --- BASE POSITIONS (LOCKED BY USER) ---
-        // These geometric starting positions are perfect and should never be altered
+        // --- BASE POSITIONS ---
+        // Shifted inward to fit the new 3-cell arm length
         const colors = [
-            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
-            { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
-            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6.30, r: 5.02 }, { c: -5.02, r: 5.02 }, { c: -6.30, r: 6.30 }, { c: -5.02, r: 6.30 }] },
-            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5.02, r: 5.02 }, { c: 6.30, r: 5.02 }, { c: 5.02, r: 6.30 }, { c: 6.30, r: 6.30 }] }
+            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -3.5, r: -3.5 }, { c: -2.5, r: -3.5 }, { c: -3.5, r: -2.5 }, { c: -2.5, r: -2.5 }] },
+            { c: 0x15803d, name: 'Green', starts: [{ c: 2.5, r: -3.5 }, { c: 3.5, r: -3.5 }, { c: 2.5, r: -2.5 }, { c: 3.5, r: -2.5 }] },
+            { c: 0xb91c1c, name: 'Red', starts: [{ c: -3.5, r: 2.5 }, { c: -2.5, r: 2.5 }, { c: -3.5, r: 3.5 }, { c: -2.5, r: 3.5 }] },
+            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 2.5, r: 2.5 }, { c: 3.5, r: 2.5 }, { c: 2.5, r: 3.5 }, { c: 3.5, r: 3.5 }] }
         ];
 
         const players = {};
@@ -1032,46 +1032,51 @@ class GameEngine {
             b.starts.forEach((pos, i) => {
                 const wx = center.x + pos.c * cellBase;
                 const wz = center.z + pos.r * cellBase;
-                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
-                tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
+                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.4); // Smaller token = more visual padding
+                tokens.push({
+                    mesh, inBase: true, trackPos: -1, homeX: wx, homeZ: wz,
+                    stepsTraveled: 0, inHome: false, homePos: -1, finished: false,
+                    playerName: b.name
+                });
             });
             players[b.name] = { tokens, color: b.c };
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Ludo 48-cell track (arms extend ±6, NO duplicate cells)
-        // Each arm: 6 outward + 1 tip + 5 return = 12 cells, 12 x 4 = 48
+        // Ludo 24-cell track (arms extend ±3, NO duplicate cells)
+        // Each arm: 3 outward + 1 tip + 2 return = 6 cells, 6 x 4 = 24
         const track = [];
 
-        // Green arm (TOP) — c=-1 going up, tip, c=1 going down (stops at -2)
-        for (let r = -1; r >= -6; r--) track.push({ c: -1, r: r });   // 0..5   (6 cells up)
-        track.push({ c: 0, r: -6 });                                  // 6      (tip)
-        for (let r = -6; r <= -2; r++) track.push({ c: 1, r: r });    // 7..11  (5 cells down)
+        // Green arm (TOP)
+        for (let r = -1; r >= -3; r--) track.push({ c: -1, r: r });   // 0, 1, 2
+        track.push({ c: 0, r: -3 });                                  // 3 (tip)
+        for (let r = -3; r <= -2; r++) track.push({ c: 1, r: r });    // 4, 5
 
-        // Purple arm (RIGHT) — r=-1 going right, tip, r=1 going left (stops at 2)
-        for (let c = 1; c <= 6; c++) track.push({ c: c, r: -1 });     // 12..17 (6 cells right)
-        track.push({ c: 6, r: 0 });                                   // 18     (tip)
-        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // 19..23 (5 cells left)
+        // Purple arm (RIGHT)
+        for (let c = 1; c <= 3; c++) track.push({ c: c, r: -1 });     // 6, 7, 8
+        track.push({ c: 3, r: 0 });                                   // 9 (tip)
+        for (let c = 3; c >= 2; c--) track.push({ c: c, r: 1 });      // 10, 11
 
-        // Red arm (BOTTOM) — c=1 going down, tip, c=-1 going up (stops at 2)
-        for (let r = 1; r <= 6; r++) track.push({ c: 1, r: r });      // 24..29 (6 cells down)
-        track.push({ c: 0, r: 6 });                                   // 30     (tip)
-        for (let r = 6; r >= 2; r--) track.push({ c: -1, r: r });     // 31..35 (5 cells up)
+        // Red arm (BOTTOM)
+        for (let r = 1; r <= 3; r++) track.push({ c: 1, r: r });      // 12, 13, 14
+        track.push({ c: 0, r: 3 });                                   // 15 (tip)
+        for (let r = 3; r >= 2; r--) track.push({ c: -1, r: r });     // 16, 17
 
-        // Blue arm (LEFT) — r=1 going left, tip, r=-1 going right (stops at -2)
-        for (let c = -1; c >= -6; c--) track.push({ c: c, r: 1 });    // 36..41 (6 cells left)
-        track.push({ c: -6, r: 0 });                                  // 42     (tip)
-        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // 43..47 (5 cells right)
+        // Blue arm (LEFT)
+        for (let c = -1; c >= -3; c--) track.push({ c: c, r: 1 });    // 18, 19, 20
+        track.push({ c: -3, r: 0 });                                  // 21 (tip)
+        for (let c = -3; c <= -2; c++) track.push({ c: c, r: -1 });   // 22, 23
 
-        // Home Columns (5 cells each, center column of each arm toward (0,0))
+        // Home Columns (3 cells each toward center)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 5; i++) homeColumns.Green.push({ c: 0, r: -6 + i });   // r: -5 to -1
-        for (let i = 1; i <= 5; i++) homeColumns.Purple.push({ c: 6 - i, r: 0 });   // c: 5 to 1
-        for (let i = 1; i <= 5; i++) homeColumns.Red.push({ c: 0, r: 6 - i });      // r: 5 to 1
-        for (let i = 1; i <= 5; i++) homeColumns.Blue.push({ c: -6 + i, r: 0 });    // c: -5 to -1
+        for (let i = 1; i <= 3; i++) homeColumns.Green.push({ c: 0, r: -4 + i });   // r: -3, -2, -1
+        for (let i = 1; i <= 3; i++) homeColumns.Purple.push({ c: 4 - i, r: 0 });   // c: 3, 2, 1
+        for (let i = 1; i <= 3; i++) homeColumns.Red.push({ c: 0, r: 4 - i });      // r: 3, 2, 1
+        for (let i = 1; i <= 3; i++) homeColumns.Blue.push({ c: -4 + i, r: 0 });    // c: -3, -2, -1
 
         this.gameState = {
-            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
+            currentPlayer: 'Blue', gameOver: false, players,
+            diceResult: null, rolled: false, captureBonus: false,
             topY, center, track, homeColumns, cell, offsetX, offsetZ
         };
         this.setCamera(0, 24, 16, 0, 22, 13);
@@ -1322,11 +1327,15 @@ class GameEngine {
             else this.gameStatus.innerText = `Rolled ${val}. Click a token on the track to move it forward.`;
             // Auto-advance turn if no moves possible (simplified)
             const player = gs.players[gs.currentPlayer];
-            const hasTrack = player.tokens.some(t => !t.inBase);
-            const hasBase = player.tokens.some(t => t.inBase);
-            if (!hasTrack && (val !== 6 || !hasBase)) {
-                this.gameStatus.innerText = `Rolled ${val}. No moves available. Next player.`;
-                setTimeout(() => this.advanceLudoTurn(), 1000);
+            const canMove = player.tokens.some(t => {
+                if (t.finished) return false;
+                if (t.inBase) return val === 6;
+                if (t.inHome) return t.homePos + val <= 3;
+                return true;
+            });
+            if (!canMove) {
+                this.gameStatus.innerText = `Rolled ${val}. No moves possible.`;
+                setTimeout(() => this.advanceLudoTurn(), 1500);
             }
         } else if (this.currentGame === 'monopoly') {
             gs.rolled = true;
@@ -1693,7 +1702,7 @@ class GameEngine {
 
     clickLudo() {
         const gs = this.gameState;
-        if (!gs.rolled) { this.gameStatus.innerText = 'Roll the dice first!'; return; }
+        if (!gs.rolled || gs.gameOver) return;
         const player = gs.players[gs.currentPlayer];
         const meshes = player.tokens.map(t => t.mesh);
         const hit = this.raycaster.intersectObjects(meshes, true);
@@ -1701,49 +1710,132 @@ class GameEngine {
         let clickedMesh = hit[0].object;
         while (clickedMesh.parent && !meshes.includes(clickedMesh)) clickedMesh = clickedMesh.parent;
         const token = player.tokens.find(t => t.mesh === clickedMesh);
-        if (!token) return;
+        if (!token || token.finished) return;
 
-        // Entry points for 48-cell Ludo track (12 apart per arm)
-        const entryIndex = { Green: 0, Purple: 12, Red: 24, Blue: 36 };
+        const entryIndex = { Green: 0, Purple: 6, Red: 12, Blue: 18 };
+        const dice = gs.diceResult;
 
-        if (token.inBase && gs.diceResult === 6) {
-            // --- EXIT BASE ---
+        if (token.inBase && dice === 6) {
             token.inBase = false;
+            token.stepsTraveled = 0;
             token.trackPos = entryIndex[gs.currentPlayer];
             const dest = gs.track[token.trackPos];
             const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
             this.animateMove(token.mesh, wx, gs.topY, wz, () => {
+                this.handleLudoCapture(token);
                 this.updateLudoStacking(gs);
                 this.advanceLudoTurn();
             });
         } else if (!token.inBase) {
-            // --- MOVE ON TRACK ---
-            const track = gs.track;
-            const totalTrack = track.length; // 36
-            const newPos = (token.trackPos + gs.diceResult) % totalTrack;
-            token.trackPos = newPos;
-            const dest = track[newPos];
-            const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
-            const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
-            this.animateMove(token.mesh, wx, gs.topY, wz, () => {
-                this.updateLudoStacking(gs);
-                this.advanceLudoTurn();
+            const oldSteps = token.stepsTraveled;
+            const newSteps = oldSteps + dice;
+
+            if (token.inHome) {
+                if (newSteps > 3) return; // Exact roll to finish
+                token.homePos = newSteps;
+                token.stepsTraveled = newSteps;
+                if (newSteps === 3) {
+                    token.finished = true;
+                    this.animateMove(token.mesh, gs.center.x, gs.topY + 0.8, gs.center.z, () => {
+                        token.mesh.visible = false;
+                        this.showToast(`${gs.currentPlayer} token reached home!`, 'success');
+                        this.checkLudoWin();
+                        this.advanceLudoTurn();
+                    });
+                } else {
+                    const dest = gs.homeColumns[gs.currentPlayer][newSteps];
+                    const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+                    const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+                    this.animateMove(token.mesh, wx, gs.topY, wz, () => {
+                        this.updateLudoStacking(gs);
+                        this.advanceLudoTurn();
+                    });
+                }
+            } else {
+                // Moving on track
+                if (newSteps >= 24) {
+                    const hIdx = newSteps - 24;
+                    if (hIdx > 3) return;
+                    token.trackPos = -1;
+                    if (hIdx === 3) {
+                        token.finished = true;
+                        this.animateMove(token.mesh, gs.center.x, gs.topY + 0.8, gs.center.z, () => {
+                            token.mesh.visible = false;
+                            this.showToast(`${gs.currentPlayer} token finished!`, 'success');
+                            this.checkLudoWin();
+                            this.advanceLudoTurn();
+                        });
+                    } else {
+                        token.inHome = true;
+                        token.homePos = hIdx;
+                        token.stepsTraveled = newSteps;
+                        const dest = gs.homeColumns[gs.currentPlayer][hIdx];
+                        const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+                        const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+                        this.animateMove(token.mesh, wx, gs.topY, wz, () => {
+                            this.updateLudoStacking(gs);
+                            this.advanceLudoTurn();
+                        });
+                    }
+                } else {
+                    token.trackPos = (token.trackPos + dice) % 24;
+                    token.stepsTraveled = newSteps;
+                    const dest = gs.track[token.trackPos];
+                    const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+                    const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+                    this.animateMove(token.mesh, wx, gs.topY, wz, () => {
+                        this.handleLudoCapture(token);
+                        this.updateLudoStacking(gs);
+                        this.advanceLudoTurn();
+                    });
+                }
+            }
+        }
+    }
+
+    handleLudoCapture(movedToken) {
+        const gs = this.gameState;
+        for (const name of Object.keys(gs.players)) {
+            if (name === gs.currentPlayer) continue;
+            gs.players[name].tokens.forEach(ot => {
+                if (!ot.inBase && !ot.inHome && !ot.finished && ot.trackPos === movedToken.trackPos) {
+                    // KICKED!
+                    ot.inBase = true;
+                    ot.trackPos = -1;
+                    ot.stepsTraveled = 0;
+                    this.animateMove(ot.mesh, ot.homeX, gs.topY, ot.homeZ);
+                    this.showToast(`${gs.currentPlayer} captured ${name}'s token!`, 'success');
+                    gs.captureBonus = true;
+                }
             });
+        }
+    }
+
+    checkLudoWin() {
+        const gs = this.gameState;
+        const player = gs.players[gs.currentPlayer];
+        if (player.tokens.every(t => t.finished)) {
+            this.gameStatus.innerText = `CONGRATULATIONS! ${gs.currentPlayer} WINS!`;
+            this.showToast(`${gs.currentPlayer} wins the game!`, 'success');
+            gs.gameOver = true;
         }
     }
 
     advanceLudoTurn() {
         const gs = this.gameState;
-        const rolledSix = this.lastDiceResult === 6;
+        if (gs.gameOver) return;
+        const bonus = (this.lastDiceResult === 6) || gs.captureBonus;
+        gs.captureBonus = false;
         gs.rolled = false;
         gs.diceResult = null;
-        this.lastDiceResult = null; // Reset to prevent stale data
-        // If rolled 6, same player rolls again
-        if (rolledSix) {
-            this.gameStatus.innerText = `Rolled 6! ${gs.currentPlayer} rolls again.`;
+        this.lastDiceResult = null;
+
+        if (bonus) {
+            this.gameStatus.innerText = `Bonus turn for ${gs.currentPlayer}! Roll again.`;
             return;
         }
+
         const order = ['Blue', 'Green', 'Purple', 'Red'];
         const idx = order.indexOf(gs.currentPlayer);
         gs.currentPlayer = order[(idx + 1) % order.length];
@@ -1753,61 +1845,65 @@ class GameEngine {
     }
 
     updateLudoStacking(gs) {
-        // Collect all tokens from all players that are on the track
         const allTokens = [];
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
-                if (!t.inBase) allTokens.push(t);
+                if (!t.inBase && !t.finished) allTokens.push(t);
             });
         }
-        // Group tokens by trackPos
         const groups = {};
         allTokens.forEach(t => {
-            const k = t.trackPos;
+            let k;
+            if (t.inHome) k = `H_${t.playerName}_${t.homePos}`;
+            else k = `T_${t.trackPos}`;
             if (!groups[k]) groups[k] = [];
             groups[k].push(t);
         });
 
-        // First pass: compute base position for each trackPos (from the track grid)
-        const trackBasePos = {};
-        for (const key of Object.keys(groups)) {
-            const idx = parseInt(key);
-            const dest = gs.track[idx];
-            trackBasePos[key] = {
-                x: gs.center.x + dest.c * gs.cell + (gs.offsetX || 0),
-                z: gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0)
-            };
-        }
-
-        // Formation offsets for stacking (Centered grid)
-        const d = 0.35; // Standard spacing
-        const formations = {
-            1: [[0, 0]],
-            2: [[-d, 0], [d, 0]],
-            3: [[0, -d], [-d, d], [d, d]],
-            4: [[-d, -d], [d, -d], [-d, d], [d, d]]  // [::] pattern centered
-        };
-
-        // Apply stacking per group
         for (const key of Object.keys(groups)) {
             const grp = groups[key];
-            const base = trackBasePos[key];
+            let basePos;
+            if (key.startsWith('H_')) {
+                const parts = key.split('_');
+                const pName = parts[1], hPos = parseInt(parts[2]);
+                const dest = gs.homeColumns[pName][hPos];
+                basePos = {
+                    x: gs.center.x + dest.c * gs.cell + (gs.offsetX || 0),
+                    z: gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0)
+                };
+            } else {
+                const idx = parseInt(key.split('_')[1]);
+                const dest = gs.track[idx];
+                basePos = {
+                    x: gs.center.x + dest.c * gs.cell + (gs.offsetX || 0),
+                    z: gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0)
+                };
+            }
+
+            const d = 0.5; // Even wider spread for maximum padding feel
+            const formations = {
+                1: [[0, 0]],
+                2: [[-d, 0], [d, 0]],
+                3: [[0, -d], [-d, d], [d, d]],
+                4: [[-d, -d], [d, -d], [-d, d], [d, d]]
+            };
+
             const count = Math.min(grp.length, 4);
             const offsets = formations[count] || formations[4];
-            const s = count === 1 ? 0.6 : 0.35; // shrink when sharing
+            const s = grp.length === 1 ? 0.4 : 0.25; // Smaller tokens favor the "wide padding" request
 
             grp.forEach((t, i) => {
                 const off = offsets[i] || [0, 0];
                 t.mesh.scale.set(s, s, s);
-                t.mesh.position.x = base.x + off[0];
-                t.mesh.position.z = base.z + off[1];
+                t.mesh.position.x = basePos.x + off[0];
+                t.mesh.position.z = basePos.z + off[1];
             });
         }
 
-        // Restore tokens in base to normal scale
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
                 if (t.inBase) t.mesh.scale.set(0.6, 0.6, 0.6);
+                if (t.finished) { t.mesh.visible = false; }
             });
         }
         this._needsRender = true;
@@ -1835,12 +1931,12 @@ class GameEngine {
         const gs = this.gameState;
         if (!this.debugGrid || !gs.cell) return;
 
-        // Draw a RED SQUARE at EVERY landing spot on the track
+        // Visualize all 24 perimeter cells (Short-arm layout)
         const pts = [];
-        const r = gs.cell * 0.4; // Slightly smaller than the cell itself
+        const r = gs.cell * 0.25; // Much thinner boxes to emphasize empty space (padding)
         const y = gs.topY + 0.1;
 
-        // Visualize all 52 perimeter steps (Standard Ludo track)
+        // Visualize all 48 perimeter cells (Ludo 4-arm track)
         gs.track.forEach((dest, i) => {
             let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
@@ -1852,16 +1948,31 @@ class GameEngine {
                 new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
             );
         });
+        // Visualize Home Columns
+        Object.keys(gs.homeColumns).forEach(color => {
+            gs.homeColumns[color].forEach(dest => {
+                let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+                let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+                pts.push(
+                    new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
+                    new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
+                    new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
+                    new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
+                );
+            });
+        });
 
         this.debugGrid.geometry.setFromPoints(pts);
 
-        // Snap any tokens on track to visual center immediately
+        // Snap any tokens on track/home to visual center immediately
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
-                if (!t.inBase && t.trackPos !== undefined) {
-                    const d = gs.track[t.trackPos];
-                    t.mesh.position.x = gs.center.x + d.c * gs.cell + (gs.offsetX || 0);
-                    t.mesh.position.z = gs.center.z + d.r * gs.cell + (gs.offsetZ || 0);
+                if (!t.inBase && !t.finished) {
+                    let d = t.inHome ? gs.homeColumns[t.playerName][t.homePos] : gs.track[t.trackPos];
+                    if (d) {
+                        t.mesh.position.x = gs.center.x + d.c * gs.cell + (gs.offsetX || 0);
+                        t.mesh.position.z = gs.center.z + d.r * gs.cell + (gs.offsetZ || 0);
+                    }
                 }
             });
         }
