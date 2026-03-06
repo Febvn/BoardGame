@@ -1676,7 +1676,7 @@ class GameEngine {
         const entryWorld = {
             Blue: { x: -8.47, z: -1.60 },
             Green: { x: 1.67, z: -8.35 },
-            Red: { x: -1.67, z: 8.35 },
+            Red: { x: -1.77, z: 8.47 },
             Purple: { x: 8.46, z: 1.80 }
         };
 
