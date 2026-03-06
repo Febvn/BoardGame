@@ -1247,8 +1247,8 @@ class GameEngine {
                 const pt = hits[0].point;
                 const cell = this.gameState.cell;
                 const center = this.gameState.center;
-                const c = Math.round((pt.x - center.x) / cell);
-                const r = Math.round((pt.z - center.z) / cell);
+                const c = ((pt.x - center.x) / cell).toFixed(2);
+                const r = ((pt.z - center.z) / cell).toFixed(2);
                 this.gameStatus.innerText = `Map Crosshair => x/c: ${c}, z/r: ${r} | World: (${pt.x.toFixed(2)}, ${pt.z.toFixed(2)})`;
             }
         }
@@ -1267,8 +1267,8 @@ class GameEngine {
                 const pt = hits[0].point;
                 const cell = this.gameState.cell;
                 const center = this.gameState.center;
-                const c = Math.round((pt.x - center.x) / cell);
-                const r = Math.round((pt.z - center.z) / cell);
+                const c = ((pt.x - center.x) / cell).toFixed(2);
+                const r = ((pt.z - center.z) / cell).toFixed(2);
 
                 // Show a prompt so the user can easily copy the coordinates
                 const copyText = `{ c: ${c}, r: ${r} }`;
