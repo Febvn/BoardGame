@@ -1739,24 +1739,44 @@ class GameEngine {
             if (!groups[k]) groups[k] = [];
             groups[k].push(t);
         });
-        // Apply stacking: if multiple tokens share a position, shrink & offset
+
+        // First pass: compute base position for each trackPos (from the track grid)
+        const trackBasePos = {};
+        for (const key of Object.keys(groups)) {
+            const idx = parseInt(key);
+            const dest = gs.track[idx];
+            trackBasePos[key] = {
+                x: gs.center.x + dest.c * gs.cell,
+                z: gs.center.z + dest.r * gs.cell
+            };
+        }
+
+        // Formation offsets for stacking
+        const d = 0.35; // half-spacing for the grid
+        const formations = {
+            1: [[0, 0]],
+            2: [[-d, 0], [d, 0]],
+            3: [[0, -d], [-d, d], [d, d]],
+            4: [[-d, -d], [d, -d], [-d, d], [d, d]]  // [::] pattern
+        };
+
+        // Apply stacking per group
         for (const key of Object.keys(groups)) {
             const grp = groups[key];
-            if (grp.length > 1) {
-                const spacing = 0.3;
-                const totalWidth = (grp.length - 1) * spacing;
-                grp.forEach((t, i) => {
-                    const s = 0.4; // shrunk scale
-                    t.mesh.scale.set(s, s, s);
-                    t.mesh.position.x += -totalWidth / 2 + i * spacing;
-                });
-            } else {
-                // Restore normal scale
-                const t = grp[0];
-                t.mesh.scale.set(0.6, 0.6, 0.6);
-            }
+            const base = trackBasePos[key];
+            const count = Math.min(grp.length, 4);
+            const offsets = formations[count] || formations[4];
+            const s = count === 1 ? 0.6 : 0.35; // shrink when sharing
+
+            grp.forEach((t, i) => {
+                const off = offsets[i] || [0, 0];
+                t.mesh.scale.set(s, s, s);
+                t.mesh.position.x = base.x + off[0];
+                t.mesh.position.z = base.z + off[1];
+            });
         }
-        // Also restore tokens in base to normal scale
+
+        // Restore tokens in base to normal scale
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
                 if (t.inBase) t.mesh.scale.set(0.6, 0.6, 0.6);
