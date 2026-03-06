@@ -629,10 +629,18 @@ class GameEngine {
                 const center = this.gameState.center || { x: 0, z: 0 };
                 const topY = this.gameState.topY || 0.5;
 
-                // NEW: Precision Raycasting to find ACTUAL SURFACE Y (prevents sinking in center holes)
-                const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
-                const hits = ray.intersectObject(this.board, true);
-                const surfaceY = (hits.length > 0) ? (hits[0].point.y + 0.01) : topY;
+                // NEW: Precision 5-Point Box Scanner to find TRUE SURFACE Y
+                // Prevents dice from sinking into board geometric holes like the Ludo center
+                const { size } = this.getBoardMetrics(this.board);
+                const offset = Math.min(size.x, size.z) * 0.1;
+                let maxY = -Infinity;
+                const pts = [[0, 0], [offset, offset], [-offset, -offset], [offset, -offset], [-offset, offset]];
+                for (const [ox, oz] of pts) {
+                    const r = new THREE.Raycaster(new THREE.Vector3(center.x + ox, 10, center.z + oz), new THREE.Vector3(0, -1, 0));
+                    const h = r.intersectObject(this.board, true);
+                    if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
+                }
+                const surfaceY = (maxY !== -Infinity) ? (maxY + 0.05) : (topY + 0.05); // Added 0.05 elevation buffer
 
                 // placePiece handles shadows and initial surface placement
                 this.activeDice = this.placePiece('dice', center.x, surfaceY, center.z, 0xffffff, scaleBase);
@@ -783,10 +791,16 @@ class GameEngine {
         for (const col of ['white', 'black']) for (const t of types) this.models[`chess_${t}_${col}`] = await load(`Pieces/Chess/chess-${t}-${col}.gltf`);
         const { size, center } = this.getBoardMetrics(this.board);
 
-        // FIND EXACT BOARD SURFACE using Raycasting (Collision prevention)
-        const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
-        const hits = ray.intersectObject(this.board, true);
-        const topY = (hits.length > 0) ? (hits[0].point.y + 0.01) : (center.y + size.y / 2 + 0.01);
+        // FIND MAXIMUM BOARD SURFACE (Prevents sinking into recessed areas)
+        let maxY = -Infinity;
+        const offset = Math.min(size.x, size.z) * 0.1;
+        const pts = [[0, 0], [offset, offset], [-offset, -offset], [offset, -offset], [-offset, offset]];
+        for (const [ox, oz] of pts) {
+            const r = new THREE.Raycaster(new THREE.Vector3(center.x + ox, 10, center.z + oz), new THREE.Vector3(0, -1, 0));
+            const h = r.intersectObject(this.board, true);
+            if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
+        }
+        const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.01);
 
         const cell = Math.min(size.x, size.z) * 0.78 / 8; // Calibrated scale
         const offsetX = 0.12; // Adjusted based on visual analysis
@@ -975,10 +989,16 @@ class GameEngine {
         this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
 
-        // FIND EXACT BOARD SURFACE using Raycasting (Collision prevention)
-        const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
-        const hits = ray.intersectObject(this.board, true);
-        const topY = (hits.length > 0) ? (hits[0].point.y + 0.01) : (center.y + size.y / 2 + 0.02);
+        // FIND MAXIMUM BOARD SURFACE around center (Collision prevention)
+        let maxY = -Infinity;
+        const offset = Math.min(size.x, size.z) * 0.1;
+        const pts = [[0, 0], [offset, offset], [-offset, -offset], [offset, -offset], [-offset, offset]];
+        for (const [ox, oz] of pts) {
+            const r = new THREE.Raycaster(new THREE.Vector3(center.x + ox, 10, center.z + oz), new THREE.Vector3(0, -1, 0));
+            const h = r.intersectObject(this.board, true);
+            if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
+        }
+        const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
         const cell = Math.min(size.x, size.z) / 15;
         const q = 4.5 * cell; // Distance from board center to base center
         const colors = [
