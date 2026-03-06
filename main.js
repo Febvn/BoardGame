@@ -54,7 +54,9 @@ class GameEngine {
             // LIVE CALIBRATION CONTROLS (Only if in Ludo and Grid is visible)
             if (this.currentGame === 'ludo' && this.debugGrid) {
                 const gs = this.gameState;
-                const step = 0.01;
+                const step = 0.005; // Finer control
+                if (e.key.startsWith('Arrow')) e.preventDefault();
+
                 if (e.key === 'ArrowUp') { gs.offsetZ = (gs.offsetZ || 0) - step; this.updateLudoCalibration(); }
                 if (e.key === 'ArrowDown') { gs.offsetZ = (gs.offsetZ || 0) + step; this.updateLudoCalibration(); }
                 if (e.key === 'ArrowLeft') { gs.offsetX = (gs.offsetX || 0) - step; this.updateLudoCalibration(); }
@@ -634,7 +636,7 @@ class GameEngine {
         const bp = '/assets/gltf';
         const load = async u => (await this.loader.loadAsync(`${bp}/${u}`)).scene;
         this.loadingBar.style.width = '30%';
-        const dg = ['ludo', 'monopoly', 'backgammon', 'chess'];
+        const dg = ['ludo', 'monopoly', 'backgammon'];
         try {
             await this['setup_' + gt](load);
             this.loadingBar.style.width = '80%';
@@ -1011,8 +1013,12 @@ class GameEngine {
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cell = Math.min(size.x, size.z) / 15;
-        const q = 4.5 * cell;
+        const cellBase = Math.min(size.x, size.z) / 15; // Locked scaling strictly for home bases
+        const cell = Math.min(size.x, size.z) / 13;     // Dynamic scaling for track calibration
+        const offsetX = 0.0;
+        const offsetZ = 0.0;
+        // --- BASE POSITIONS (LOCKED BY USER) ---
+        // These geometric starting positions are perfect and should never be altered
         const colors = [
             { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
             { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
@@ -1024,8 +1030,8 @@ class GameEngine {
         colors.forEach(b => {
             const tokens = [];
             b.starts.forEach((pos, i) => {
-                const wx = center.x + pos.c * cell;
-                const wz = center.z + pos.r * cell;
+                const wx = center.x + pos.c * cellBase;
+                const wz = center.z + pos.r * cellBase;
                 const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
@@ -1033,31 +1039,39 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Generates the 52 perimeter steps of the Ludo board clockwise
+        // Generates an even tighter 36-step track (Arms moved closer to 1x1 center)
         const track = [];
-        for (let r = -2; r >= -7; r--) track.push({ c: -1, r: r });   // Up left side of TOP arm
-        track.push({ c: 0, r: -7 });                                  // Cross top edge
-        for (let r = -7; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side of TOP arm
-        for (let c = 2; c <= 7; c++) track.push({ c: c, r: -1 });     // Right top side of RIGHT arm
-        track.push({ c: 7, r: 0 });                                   // Cross right edge
-        for (let c = 7; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side of RIGHT arm
-        for (let r = 2; r <= 7; r++) track.push({ c: 1, r: r });      // Down right side of BOTTOM arm
-        track.push({ c: 0, r: 7 });                                   // Cross bottom edge
-        for (let r = 7; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side of BOTTOM arm
-        for (let c = -2; c >= -7; c--) track.push({ c: c, r: 1 });    // Left bottom side of LEFT arm
-        track.push({ c: -7, r: 0 });                                  // Cross left edge
-        for (let c = -7; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
+        // Green arm (TOP)
+        for (let r = -1; r >= -5; r--) track.push({ c: -1, r: r });   // Up left side (0..4)
+        track.push({ c: 0, r: -5 });                                  // Cross top (5)
+        for (let r = -5; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side (6..9)
 
-        // Generate the 4 Home Columns (Safe path to center)
+        // Purple arm (RIGHT)
+        for (let c = 1; c <= 5; c++) track.push({ c: c, r: -1 });     // Right top side (8..12)
+        track.push({ c: 5, r: 0 });                                   // Cross right (13)
+        for (let c = 5; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side (14..17)
+
+        // Red arm (BOTTOM)
+        for (let r = 1; r <= 5; r++) track.push({ c: 1, r: r });      // Down right side
+        track.push({ c: 0, r: 5 });                                   // Cross bottom
+        for (let r = 5; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side
+
+        // Blue arm (LEFT)
+        for (let c = -1; c >= -5; c--) track.push({ c: c, r: 1 });    // Left bottom side (26..30)
+        track.push({ c: -5, r: 0 });                                  // Cross left (31)
+        for (let c = -5; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side (32..35)
+
+        // Generate Home Columns to match arm lengths (ending at 0,0)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 5; i++) {
-            homeColumns.Blue.push({ c: -6 + i, r: 0 });   // Left arm moving right
-            homeColumns.Green.push({ c: 0, r: -6 + i });  // Top arm moving down
-            homeColumns.Red.push({ c: 0, r: 6 - i });     // Bottom arm moving up
-            homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
-        }
+        for (let i = 1; i <= 4; i++) homeColumns.Green.push({ c: 0, r: -5 + i });
+        for (let i = 1; i <= 4; i++) homeColumns.Purple.push({ c: 5 - i, r: 0 });
+        for (let i = 1; i <= 4; i++) homeColumns.Red.push({ c: 0, r: 5 - i });
+        for (let i = 1; i <= 4; i++) homeColumns.Blue.push({ c: -5 + i, r: 0 });
 
-        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
+        this.gameState = {
+            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
+            topY, center, track, homeColumns, cell, offsetX, offsetZ
+        };
         this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('Blue', '#1d4ed8');
     }
@@ -1687,29 +1701,24 @@ class GameEngine {
         const token = player.tokens.find(t => t.mesh === clickedMesh);
         if (!token) return;
 
-        // Entry points for each color (track index where they enter the board)
-        const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
-        // Entry world coords (precise for each color)
-        const entryWorld = {
-            Blue: { x: -8.47, z: -1.60 },
-            Green: { x: 1.67, z: -8.35 },
-            Red: { x: -1.77, z: 8.47 },
-            Purple: { x: 8.46, z: 1.80 }
-        };
+        // Entry points based on tighter 36-step track
+        const entryIndex = { Green: 4, Purple: 13, Red: 22, Blue: 31 };
 
         if (token.inBase && gs.diceResult === 6) {
-            // --- EXIT BASE: Move to entry position ---
+            // --- EXIT BASE ---
             token.inBase = false;
             token.trackPos = entryIndex[gs.currentPlayer];
-            const ew = entryWorld[gs.currentPlayer];
-            this.animateMove(token.mesh, ew.x, gs.topY, ew.z, () => {
+            const dest = gs.track[token.trackPos];
+            const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+            const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+            this.animateMove(token.mesh, wx, gs.topY, wz, () => {
                 this.updateLudoStacking(gs);
                 this.advanceLudoTurn();
             });
         } else if (!token.inBase) {
             // --- MOVE ON TRACK ---
             const track = gs.track;
-            const totalTrack = track.length; // 52
+            const totalTrack = track.length; // 36
             const newPos = (token.trackPos + gs.diceResult) % totalTrack;
             token.trackPos = newPos;
             const dest = track[newPos];
@@ -1812,8 +1821,9 @@ class GameEngine {
         const gs = this.gameState;
         if (!gs || !gs.cell) return;
 
-        const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 });
-        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
+        // Use a glowing red neon-like material for visibility
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 });
+        const geometry = new THREE.BufferGeometry();
         this.debugGrid = new THREE.LineSegments(geometry, material);
         this.scene.add(this.debugGrid);
         this.updateLudoCalibration();
@@ -1823,31 +1833,42 @@ class GameEngine {
         const gs = this.gameState;
         if (!this.debugGrid || !gs.cell) return;
 
-        // Update Grid Mesh
-        const size = 15;
-        const half = (size * gs.cell) / 2;
+        // Draw a RED SQUARE at EVERY landing spot on the track
         const pts = [];
-        const ox = gs.offsetX || 0, oz = gs.offsetZ || 0;
+        const r = gs.cell * 0.4; // Slightly smaller than the cell itself
+        const y = gs.topY + 0.1;
 
-        for (let i = 0; i <= size; i++) {
-            const pos = -half + i * gs.cell;
-            pts.push(new THREE.Vector3(-half + ox, gs.topY + 0.05, pos + oz), new THREE.Vector3(half + ox, gs.topY + 0.05, pos + oz));
-            pts.push(new THREE.Vector3(pos + ox, gs.topY + 0.05, -half + oz), new THREE.Vector3(pos + ox, gs.topY + 0.05, half + oz));
-        }
+        // Visualize all 36 perimeter steps (Tighter Center: 1x1)
+        gs.track.forEach((dest, i) => {
+            let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+            let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+
+            pts.push(
+                new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
+                new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
+                new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
+                new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
+            );
+        });
+
         this.debugGrid.geometry.setFromPoints(pts);
 
-        // Snap all track tokens to the new grid immediately for visual feedback
+        // Snap any tokens on track to visual center immediately
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
                 if (!t.inBase && t.trackPos !== undefined) {
-                    const dest = gs.track[t.trackPos];
-                    t.mesh.position.x = gs.center.x + dest.c * gs.cell + ox;
-                    t.mesh.position.z = gs.center.z + dest.r * gs.cell + oz;
+                    const d = gs.track[t.trackPos];
+                    t.mesh.position.x = gs.center.x + d.c * gs.cell + (gs.offsetX || 0);
+                    t.mesh.position.z = gs.center.z + d.r * gs.cell + (gs.offsetZ || 0);
                 }
             });
         }
         this.updateLudoStacking(gs);
-        console.log(`CALIBRATION: Cell=${gs.cell.toFixed(3)}, OffsetX=${ox.toFixed(3)}, OffsetZ=${oz.toFixed(3)}`);
+        console.clear(); // Keep log clean
+        console.log("%c LUDO CALIBRATION TOOL ", "background: #ff0000; color: #fff; font-weight: bold;");
+        console.log(`Cell      : ${gs.cell.toFixed(4)}  (Use [ and ] to scale)`);
+        console.log(`OffsetX   : ${(gs.offsetX || 0).toFixed(4)}  (Use Left/Right Arrow)`);
+        console.log(`OffsetZ   : ${(gs.offsetZ || 0).toFixed(4)}  (Use Up/Down Arrow)`);
         this._needsRender = true;
     }
 
