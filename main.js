@@ -946,21 +946,21 @@ class GameEngine {
         const cell = Math.min(size.x, size.z) / 15;
         const q = 4.5 * cell; // Distance from board center to base center
         const topY = center.y + size.y / 2 + 0.02;
-
         const colors = [
-            { c: 0x1d4ed8, name: 'Blue', ox: -q, oz: -q },     // Top Left
-            { c: 0x15803d, name: 'Green', ox: q, oz: -q },    // Top Right
-            { c: 0xb91c1c, name: 'Red', ox: -q, oz: q },      // Bottom Left
-            { c: 0x6d28d9, name: 'Purple', ox: q, oz: q }     // Bottom Right
+            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6, r: -6 }, { c: -5, r: -6 }, { c: -6, r: -5 }, { c: -5, r: -5 }] },
+            { c: 0x15803d, name: 'Green', starts: [{ c: 5, r: -6 }, { c: 6, r: -6 }, { c: 5, r: -5 }, { c: 6, r: -5 }] },
+            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6, r: 5 }, { c: -5, r: 5 }, { c: -6, r: 6 }, { c: -5, r: 6 }] },
+            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5, r: 5 }, { c: 6, r: 5 }, { c: 5, r: 6 }, { c: 6, r: 6 }] }
         ];
-        const spread = 0.7 * cell; // Distance from base center to the 4 inner squares (tightened)
+
         const players = {};
         colors.forEach(b => {
             const tokens = [];
-            const offs = [[-spread, -spread], [spread, -spread], [-spread, spread], [spread, spread]];
-            offs.forEach((o, i) => {
-                const mesh = this.placePiece('token', center.x + b.ox + o[0], topY, center.z + b.oz + o[1], b.c, 0.35);
-                tokens.push({ mesh, inBase: true, pos: -1, homeX: center.x + b.ox + o[0], homeZ: center.z + b.oz + o[1] });
+            b.starts.forEach((pos, i) => {
+                const wx = center.x + pos.c * cell;
+                const wz = center.z + pos.r * cell;
+                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.35);
+                tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
             players[b.name] = { tokens, color: b.c };
         });
