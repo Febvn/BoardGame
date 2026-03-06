@@ -617,23 +617,26 @@ class GameEngine {
         const bp = '/assets/gltf';
         const load = async u => (await this.loader.loadAsync(`${bp}/${u}`)).scene;
         this.loadingBar.style.width = '30%';
-        const dg = ['ludo', 'monopoly', 'backgammon'];
+        const dg = ['ludo', 'monopoly', 'backgammon', 'chess'];
         try {
             await this['setup_' + gt](load);
             this.loadingBar.style.width = '80%';
             if (this.board) this.board.traverse(c => { if (c.isMesh) { c.receiveShadow = true; c.castShadow = false; } });
 
-            // Setup persistent dice object that sits on the board
+            // Setup persistent dice object with shadows and exact floor alignment
             if (dg.includes(gt) && this.models.dice) {
-                this.activeDice = this.models.dice.clone();
+                const scaleBase = gt === 'ludo' ? 1.0 : 0.8;
                 const center = this.gameState.center || { x: 0, z: 0 };
                 const topY = this.gameState.topY || 0.5;
-                // Shrinking the ludo dice size per request
-                const scaleBase = gt === 'ludo' ? 1.0 : 0.8;
-                this.activeDice.scale.set(scaleBase, scaleBase, scaleBase);
-                const floorY = topY + (scaleBase * 0.5);
-                this.activeDice.position.set(center.x, floorY, center.z);
-                this.scene.add(this.activeDice);
+
+                // placePiece handles shadows and initial surface placement
+                this.activeDice = this.placePiece('dice', center.x, topY, center.z, 0xffffff, scaleBase);
+
+                // Calculate and store exact floorY so animation doesn't float/clip
+                this.activeDice.updateMatrixWorld(true);
+                const diceBox = new THREE.Box3().setFromObject(this.activeDice);
+                this.gameState.diceFloorY = topY + (this.activeDice.position.y - diceBox.min.y);
+                this.activeDice.position.y = this.gameState.diceFloorY;
             }
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
 
@@ -1186,14 +1189,10 @@ class GameEngine {
 
         const dice = this.activeDice;
         const center = this.gameState.center || { x: 0, z: 0 };
-        const topY = this.gameState.topY || 0.5;
+        const floorY = this.gameState.diceFloorY || (this.gameState.topY + 0.4);
 
-        // Make the dice bigger depending on the game so it's clearly visible in the middle
-        const scaleBase = this.currentGame === 'ludo' ? 1.0 : 0.8;
-
-        // Prevent glitching: Ensure the dice origin (center) rests exactly on top of the board, not inside it
-        const floorY = topY + (scaleBase * 0.5);
-        dice.position.set(center.x, floorY + 5, center.z);
+        // Throw dice from above
+        dice.position.set(center.x, floorY + 4, center.z);
         // Explicitly ensuring it is in the scene, though it should be already
         this.scene.add(dice);
 
