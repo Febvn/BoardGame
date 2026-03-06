@@ -1284,7 +1284,7 @@ class GameEngine {
     onDiceResult(val) {
         const gs = this.gameState;
         if (this.currentGame === 'ludo') {
-            gs.diceResult = val; gs.rolled = true;
+            gs.diceResult = val; gs.rolled = true; this.lastDiceResult = val;
             if (val === 6) this.gameStatus.innerText = `Rolled 6! Click a token in base to enter, or a token on track to move.`;
             else this.gameStatus.innerText = `Rolled ${val}. Click a token on the track to move it forward.`;
             // Auto-advance turn if no moves possible (simplified)
@@ -1661,9 +1661,7 @@ class GameEngine {
     clickLudo() {
         const gs = this.gameState;
         if (!gs.rolled) { this.gameStatus.innerText = 'Roll the dice first!'; return; }
-        // Simplified: clicking any token of current player moves it
         const player = gs.players[gs.currentPlayer];
-        // Find token meshes
         const meshes = player.tokens.map(t => t.mesh);
         const hit = this.raycaster.intersectObjects(meshes, true);
         if (hit.length === 0) return;
@@ -1671,20 +1669,98 @@ class GameEngine {
         while (clickedMesh.parent && !meshes.includes(clickedMesh)) clickedMesh = clickedMesh.parent;
         const token = player.tokens.find(t => t.mesh === clickedMesh);
         if (!token) return;
+
+        // Entry points for each color (track index where they enter the board)
+        const entryIndex = { Blue: 46, Green: 0, Red: 26, Purple: 13 };
+        // Entry world coords (precise for each color)
+        const entryWorld = {
+            Blue: { x: -8.47, z: -1.60 },
+            Green: { x: -1.36, z: -8.47 },
+            Red: { x: 1.36, z: 8.47 },
+            Purple: { x: 8.47, z: 1.36 }
+        };
+
         if (token.inBase && gs.diceResult === 6) {
-            token.inBase = false; token.pos = 0;
-            // Move to start position (just offset from center)
-            const angle = ['Red', 'Blue', 'Green', 'Yellow'].indexOf(gs.currentPlayer) * Math.PI / 2;
-            const radius = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15;
-            const tx = gs.center.x + Math.cos(angle) * radius, tz = gs.center.z + Math.sin(angle) * radius;
-            this.animateMove(token.mesh, tx, gs.topY, tz, () => { this.advanceLudoTurn(); });
+            // --- EXIT BASE: Move to entry position ---
+            token.inBase = false;
+            token.trackPos = entryIndex[gs.currentPlayer];
+            const ew = entryWorld[gs.currentPlayer];
+            this.animateMove(token.mesh, ew.x, gs.topY, ew.z, () => {
+                this.updateLudoStacking(gs);
+                this.advanceLudoTurn();
+            });
         } else if (!token.inBase) {
-            token.pos += gs.diceResult;
-            const angle = ['Red', 'Blue', 'Green', 'Yellow'].indexOf(gs.currentPlayer) * Math.PI / 2 + (token.pos * 0.15);
-            const radius = Math.min(this.getBoardMetrics(this.board).size.x, this.getBoardMetrics(this.board).size.z) * 0.15 + token.pos * 0.12;
-            const tx = gs.center.x + Math.cos(angle) * radius, tz = gs.center.z + Math.sin(angle) * radius;
-            this.animateMove(token.mesh, tx, gs.topY, tz, () => { this.advanceLudoTurn(); });
+            // --- MOVE ON TRACK ---
+            const track = gs.track;
+            const totalTrack = track.length; // 52
+            const newPos = (token.trackPos + gs.diceResult) % totalTrack;
+            token.trackPos = newPos;
+            const dest = track[newPos];
+            const wx = gs.center.x + dest.c * gs.cell;
+            const wz = gs.center.z + dest.r * gs.cell;
+            this.animateMove(token.mesh, wx, gs.topY, wz, () => {
+                this.updateLudoStacking(gs);
+                this.advanceLudoTurn();
+            });
         }
+    }
+
+    advanceLudoTurn() {
+        const gs = this.gameState;
+        gs.rolled = false;
+        gs.diceResult = null;
+        // If rolled 6, same player rolls again
+        if (this.lastDiceResult === 6) {
+            this.gameStatus.innerText = `Rolled 6! ${gs.currentPlayer} rolls again.`;
+            return;
+        }
+        const order = ['Blue', 'Green', 'Purple', 'Red'];
+        const idx = order.indexOf(gs.currentPlayer);
+        gs.currentPlayer = order[(idx + 1) % order.length];
+        const colorMap = { Blue: '#1d4ed8', Green: '#15803d', Purple: '#6d28d9', Red: '#b91c1c' };
+        this.updateTurnUI(gs.currentPlayer, colorMap[gs.currentPlayer]);
+        this.gameStatus.innerText = `${gs.currentPlayer}'s turn. Roll the dice!`;
+    }
+
+    updateLudoStacking(gs) {
+        // Collect all tokens from all players that are on the track
+        const allTokens = [];
+        for (const name of Object.keys(gs.players)) {
+            gs.players[name].tokens.forEach(t => {
+                if (!t.inBase) allTokens.push(t);
+            });
+        }
+        // Group tokens by trackPos
+        const groups = {};
+        allTokens.forEach(t => {
+            const k = t.trackPos;
+            if (!groups[k]) groups[k] = [];
+            groups[k].push(t);
+        });
+        // Apply stacking: if multiple tokens share a position, shrink & offset
+        for (const key of Object.keys(groups)) {
+            const grp = groups[key];
+            if (grp.length > 1) {
+                const spacing = 0.3;
+                const totalWidth = (grp.length - 1) * spacing;
+                grp.forEach((t, i) => {
+                    const s = 0.4; // shrunk scale
+                    t.mesh.scale.set(s, s, s);
+                    t.mesh.position.x += -totalWidth / 2 + i * spacing;
+                });
+            } else {
+                // Restore normal scale
+                const t = grp[0];
+                t.mesh.scale.set(0.6, 0.6, 0.6);
+            }
+        }
+        // Also restore tokens in base to normal scale
+        for (const name of Object.keys(gs.players)) {
+            gs.players[name].tokens.forEach(t => {
+                if (t.inBase) t.mesh.scale.set(0.6, 0.6, 0.6);
+            });
+        }
+        this._needsRender = true;
     }
 
     clickMill() {
