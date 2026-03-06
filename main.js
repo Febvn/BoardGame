@@ -54,7 +54,9 @@ class GameEngine {
             // LIVE CALIBRATION CONTROLS (Only if in Ludo and Grid is visible)
             if (this.currentGame === 'ludo' && this.debugGrid) {
                 const gs = this.gameState;
-                const step = 0.01;
+                const step = 0.005; // Finer control
+                if (e.key.startsWith('Arrow')) e.preventDefault();
+
                 if (e.key === 'ArrowUp') { gs.offsetZ = (gs.offsetZ || 0) - step; this.updateLudoCalibration(); }
                 if (e.key === 'ArrowDown') { gs.offsetZ = (gs.offsetZ || 0) + step; this.updateLudoCalibration(); }
                 if (e.key === 'ArrowLeft') { gs.offsetX = (gs.offsetX || 0) - step; this.updateLudoCalibration(); }
@@ -1812,8 +1814,9 @@ class GameEngine {
         const gs = this.gameState;
         if (!gs || !gs.cell) return;
 
-        const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.8 });
-        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]);
+        // Use a glowing red neon-like material for visibility
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 });
+        const geometry = new THREE.BufferGeometry();
         this.debugGrid = new THREE.LineSegments(geometry, material);
         this.scene.add(this.debugGrid);
         this.updateLudoCalibration();
@@ -1823,31 +1826,38 @@ class GameEngine {
         const gs = this.gameState;
         if (!this.debugGrid || !gs.cell) return;
 
-        // Update Grid Mesh
-        const size = 15;
-        const half = (size * gs.cell) / 2;
-        const pts = [];
-        const ox = gs.offsetX || 0, oz = gs.offsetZ || 0;
+        // Draw ONLY ONE RED RECTANGLE at Blue's entry point (Anchoring)
+        const trackIdx = 47; // Blue entry square
+        const dest = gs.track[trackIdx];
+        const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
+        const wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
+        const r = gs.cell / 2; // half cell size
+        const y = gs.topY + 0.1; // lift slightly above board
 
-        for (let i = 0; i <= size; i++) {
-            const pos = -half + i * gs.cell;
-            pts.push(new THREE.Vector3(-half + ox, gs.topY + 0.05, pos + oz), new THREE.Vector3(half + ox, gs.topY + 0.05, pos + oz));
-            pts.push(new THREE.Vector3(pos + ox, gs.topY + 0.05, -half + oz), new THREE.Vector3(pos + ox, gs.topY + 0.05, half + oz));
-        }
+        const pts = [
+            new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
+            new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
+            new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
+            new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
+        ];
         this.debugGrid.geometry.setFromPoints(pts);
 
-        // Snap all track tokens to the new grid immediately for visual feedback
+        // Snap any tokens on track to visual center immediately
         for (const name of Object.keys(gs.players)) {
             gs.players[name].tokens.forEach(t => {
                 if (!t.inBase && t.trackPos !== undefined) {
-                    const dest = gs.track[t.trackPos];
-                    t.mesh.position.x = gs.center.x + dest.c * gs.cell + ox;
-                    t.mesh.position.z = gs.center.z + dest.r * gs.cell + oz;
+                    const d = gs.track[t.trackPos];
+                    t.mesh.position.x = gs.center.x + d.c * gs.cell + (gs.offsetX || 0);
+                    t.mesh.position.z = gs.center.z + d.r * gs.cell + (gs.offsetZ || 0);
                 }
             });
         }
         this.updateLudoStacking(gs);
-        console.log(`CALIBRATION: Cell=${gs.cell.toFixed(3)}, OffsetX=${ox.toFixed(3)}, OffsetZ=${oz.toFixed(3)}`);
+        console.clear(); // Keep log clean
+        console.log("%c LUDO CALIBRATION TOOL ", "background: #ff0000; color: #fff; font-weight: bold;");
+        console.log(`Cell      : ${gs.cell.toFixed(4)}  (Use [ and ] to scale)`);
+        console.log(`OffsetX   : ${(gs.offsetX || 0).toFixed(4)}  (Use Left/Right Arrow)`);
+        console.log(`OffsetZ   : ${(gs.offsetZ || 0).toFixed(4)}  (Use Up/Down Arrow)`);
         this._needsRender = true;
     }
 
