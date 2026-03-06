@@ -1039,35 +1039,36 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Standard Ludo 52-step track (each arm: 6 cells per side + 1 tip = 13, x4 = 52)
+        // Ludo 48-cell track (arms extend ±6, NO duplicate cells)
+        // Each arm: 6 outward + 1 tip + 5 return = 12 cells, 12 x 4 = 48
         const track = [];
 
-        // Green arm (TOP) — left side going up, cross tip, right side going down
+        // Green arm (TOP) — c=-1 going up, tip, c=1 going down (stops at -2)
         for (let r = -1; r >= -6; r--) track.push({ c: -1, r: r });   // 0..5   (6 cells up)
         track.push({ c: 0, r: -6 });                                  // 6      (tip)
-        for (let r = -6; r <= -1; r++) track.push({ c: 1, r: r });    // 7..12  (6 cells down)
+        for (let r = -6; r <= -2; r++) track.push({ c: 1, r: r });    // 7..11  (5 cells down)
 
-        // Purple arm (RIGHT) — top row going right, cross tip, bottom row going left
-        for (let c = 1; c <= 6; c++) track.push({ c: c, r: -1 });     // 13..18 (6 cells right)
-        track.push({ c: 6, r: 0 });                                   // 19     (tip)
-        for (let c = 6; c >= 1; c--) track.push({ c: c, r: 1 });      // 20..25 (6 cells left)
+        // Purple arm (RIGHT) — r=-1 going right, tip, r=1 going left (stops at 2)
+        for (let c = 1; c <= 6; c++) track.push({ c: c, r: -1 });     // 12..17 (6 cells right)
+        track.push({ c: 6, r: 0 });                                   // 18     (tip)
+        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // 19..23 (5 cells left)
 
-        // Red arm (BOTTOM) — right side going down, cross tip, left side going up
-        for (let r = 1; r <= 6; r++) track.push({ c: 1, r: r });      // 26..31 (6 cells down)
-        track.push({ c: 0, r: 6 });                                   // 32     (tip)
-        for (let r = 6; r >= 1; r--) track.push({ c: -1, r: r });     // 33..38 (6 cells up)
+        // Red arm (BOTTOM) — c=1 going down, tip, c=-1 going up (stops at 2)
+        for (let r = 1; r <= 6; r++) track.push({ c: 1, r: r });      // 24..29 (6 cells down)
+        track.push({ c: 0, r: 6 });                                   // 30     (tip)
+        for (let r = 6; r >= 2; r--) track.push({ c: -1, r: r });     // 31..35 (5 cells up)
 
-        // Blue arm (LEFT) — bottom row going left, cross tip, top row going right
-        for (let c = -1; c >= -6; c--) track.push({ c: c, r: 1 });    // 39..44 (6 cells left)
-        track.push({ c: -6, r: 0 });                                  // 45     (tip)
-        for (let c = -6; c <= -1; c++) track.push({ c: c, r: -1 });   // 46..51 (6 cells right)
+        // Blue arm (LEFT) — r=1 going left, tip, r=-1 going right (stops at -2)
+        for (let c = -1; c >= -6; c--) track.push({ c: c, r: 1 });    // 36..41 (6 cells left)
+        track.push({ c: -6, r: 0 });                                  // 42     (tip)
+        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // 43..47 (5 cells right)
 
-        // Home Columns (5 cells each, from arm entrance toward center 0,0)
+        // Home Columns (5 cells each, center column of each arm toward (0,0))
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 5; i++) homeColumns.Green.push({ c: 0, r: -6 + i });   // r: -5,-4,-3,-2,-1
-        for (let i = 1; i <= 5; i++) homeColumns.Purple.push({ c: 6 - i, r: 0 });   // c: 5,4,3,2,1
-        for (let i = 1; i <= 5; i++) homeColumns.Red.push({ c: 0, r: 6 - i });      // r: 5,4,3,2,1
-        for (let i = 1; i <= 5; i++) homeColumns.Blue.push({ c: -6 + i, r: 0 });    // c: -5,-4,-3,-2,-1
+        for (let i = 1; i <= 5; i++) homeColumns.Green.push({ c: 0, r: -6 + i });   // r: -5 to -1
+        for (let i = 1; i <= 5; i++) homeColumns.Purple.push({ c: 6 - i, r: 0 });   // c: 5 to 1
+        for (let i = 1; i <= 5; i++) homeColumns.Red.push({ c: 0, r: 6 - i });      // r: 5 to 1
+        for (let i = 1; i <= 5; i++) homeColumns.Blue.push({ c: -6 + i, r: 0 });    // c: -5 to -1
 
         this.gameState = {
             currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
@@ -1702,8 +1703,8 @@ class GameEngine {
         const token = player.tokens.find(t => t.mesh === clickedMesh);
         if (!token) return;
 
-        // Entry points for standard 52-step Ludo track (13 apart)
-        const entryIndex = { Green: 6, Purple: 19, Red: 32, Blue: 45 };
+        // Entry points for 48-cell Ludo track (12 apart per arm)
+        const entryIndex = { Green: 0, Purple: 12, Red: 24, Blue: 36 };
 
         if (token.inBase && gs.diceResult === 6) {
             // --- EXIT BASE ---
