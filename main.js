@@ -1015,6 +1015,8 @@ class GameEngine {
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
         const cell = Math.min(size.x, size.z) / 15;
         const q = 4.5 * cell;
+        // --- BASE POSITIONS (LOCKED BY USER) ---
+        // These geometric starting positions are perfect and should never be altered
         const colors = [
             { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
             { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
