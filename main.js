@@ -951,7 +951,7 @@ class GameEngine {
             { c: 0xb91c1c, name: 'Red', ox: -q, oz: q },      // Bottom Left
             { c: 0x6d28d9, name: 'Purple', ox: q, oz: q }     // Bottom Right
         ];
-        const spread = 0.9 * cell; // Distance from base center to the 4 inner squares (tightened)
+        const spread = 0.7 * cell; // Distance from base center to the 4 inner squares (tightened)
         const players = {};
         colors.forEach(b => {
             const tokens = [];
