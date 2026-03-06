@@ -1169,13 +1169,22 @@ class GameEngine {
         this.diceResultUI.classList.remove('hidden');
         this.diceValueDisp.innerText = '...';
         const dice = this.models.dice.clone();
-        dice.position.set(0, 5, 0); dice.scale.set(0.5, 0.5, 0.5);
+
+        const center = this.gameState.center || { x: 0, z: 0 };
+        const topY = this.gameState.topY || 0.5;
+
+        dice.position.set(center.x, topY + 4, center.z);
+        // Make the dice bigger depending on the game so it's clearly visible in the middle
+        const scaleBase = this.currentGame === 'ludo' ? 1.8 : 0.8;
+        dice.scale.set(scaleBase, scaleBase, scaleBase);
         this.scene.add(dice);
+
         const result = Math.floor(Math.random() * 6) + 1;
         let t = 0;
         const anim = () => {
-            t += 0.06; dice.rotation.x += 0.35; dice.rotation.z += 0.25;
-            dice.position.y = 0.5 + Math.abs(Math.sin(t * 6)) * Math.max(0, 3 - t);
+            t += 0.05; // Slightly slower rotation for dramatic effect
+            dice.rotation.x += 0.35; dice.rotation.z += 0.25;
+            dice.position.y = topY + Math.abs(Math.sin(t * 6)) * Math.max(0, 4 - t);
             if (t < 2.5) requestAnimationFrame(anim);
             else {
                 this.scene.remove(dice);
