@@ -1039,34 +1039,34 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Generates an asymmetrical 40-step track (Top/Bottom arms=4 squares, Left/Right arms=5 squares)
+        // Generates an even tighter 36-step track (Arms moved closer to 1x1 center)
         const track = [];
-        // Green arm (TOP) - Length 4
-        for (let r = -2; r >= -5; r--) track.push({ c: -1, r: r });   // Up left side (0..3)
-        track.push({ c: 0, r: -5 });                                  // Cross top (4)
-        for (let r = -5; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side (5..8)
+        // Green arm (TOP)
+        for (let r = -1; r >= -4; r--) track.push({ c: -1, r: r });   // Up left side (0..3)
+        track.push({ c: 0, r: -4 });                                  // Cross top (4)
+        for (let r = -4; r <= -2; r++) track.push({ c: 1, r: r });    // Down right side (5..7)
 
-        // Purple arm (RIGHT) - Length 5
-        for (let c = 2; c <= 6; c++) track.push({ c: c, r: -1 });     // Right top side (9..13)
-        track.push({ c: 6, r: 0 });                                   // Cross right (14)
-        for (let c = 6; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side (15..19)
+        // Purple arm (RIGHT)
+        for (let c = 1; c <= 5; c++) track.push({ c: c, r: -1 });     // Right top side (8..12)
+        track.push({ c: 5, r: 0 });                                   // Cross right (13)
+        for (let c = 5; c >= 2; c--) track.push({ c: c, r: 1 });      // Left bottom side (14..17)
 
-        // Red arm (BOTTOM) - Length 4
-        for (let r = 2; r <= 5; r++) track.push({ c: 1, r: r });      // Down right side (20..23)
-        track.push({ c: 0, r: 5 });                                   // Cross bottom (24)
-        for (let r = 5; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side (25..28)
+        // Red arm (BOTTOM)
+        for (let r = 1; r <= 4; r++) track.push({ c: 1, r: r });      // Down right side (18..21)
+        track.push({ c: 0, r: 4 });                                   // Cross bottom (22)
+        for (let r = 4; r >= 2; r--) track.push({ c: -1, r: r });     // Up left side (23..25)
 
-        // Blue arm (LEFT) - Length 5
-        for (let c = -2; c >= -6; c--) track.push({ c: c, r: 1 });    // Left bottom side (29..33)
-        track.push({ c: -6, r: 0 });                                  // Cross left (34)
-        for (let c = -6; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side (35..39)
+        // Blue arm (LEFT)
+        for (let c = -1; c >= -5; c--) track.push({ c: c, r: 1 });    // Left bottom side (26..30)
+        track.push({ c: -5, r: 0 });                                  // Cross left (31)
+        for (let c = -5; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side (32..35)
 
-        // Generate Home Columns to match arm lengths
+        // Generate Home Columns to match arm lengths (ending at 0,0)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 4; i++) homeColumns.Green.push({ c: 0, r: -6 + i });
-        for (let i = 1; i <= 5; i++) homeColumns.Purple.push({ c: 6 - i, r: 0 });
-        for (let i = 1; i <= 4; i++) homeColumns.Red.push({ c: 0, r: 6 - i });
-        for (let i = 1; i <= 5; i++) homeColumns.Blue.push({ c: -6 + i, r: 0 });
+        for (let i = 1; i <= 3; i++) homeColumns.Green.push({ c: 0, r: -4 + i });
+        for (let i = 1; i <= 4; i++) homeColumns.Purple.push({ c: 5 - i, r: 0 });
+        for (let i = 1; i <= 3; i++) homeColumns.Red.push({ c: 0, r: 4 - i });
+        for (let i = 1; i <= 4; i++) homeColumns.Blue.push({ c: -5 + i, r: 0 });
 
         this.gameState = {
             currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
@@ -1701,8 +1701,8 @@ class GameEngine {
         const token = player.tokens.find(t => t.mesh === clickedMesh);
         if (!token) return;
 
-        // Entry points based on asymmetric 40-step track
-        const entryIndex = { Green: 0, Purple: 9, Red: 20, Blue: 29 };
+        // Entry points based on tighter 36-step track
+        const entryIndex = { Green: 4, Purple: 13, Red: 22, Blue: 31 };
 
         if (token.inBase && gs.diceResult === 6) {
             // --- EXIT BASE ---
@@ -1718,7 +1718,7 @@ class GameEngine {
         } else if (!token.inBase) {
             // --- MOVE ON TRACK ---
             const track = gs.track;
-            const totalTrack = track.length; // 40
+            const totalTrack = track.length; // 36
             const newPos = (token.trackPos + gs.diceResult) % totalTrack;
             token.trackPos = newPos;
             const dest = track[newPos];
@@ -1838,7 +1838,7 @@ class GameEngine {
         const r = gs.cell * 0.4; // Slightly smaller than the cell itself
         const y = gs.topY + 0.1;
 
-        // Visualize all 40 perimeter steps (Asymmetric: 4x5)
+        // Visualize all 36 perimeter steps (Tighter Center: 1x1)
         gs.track.forEach((dest, i) => {
             let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
