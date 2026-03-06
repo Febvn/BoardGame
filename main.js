@@ -93,6 +93,7 @@ class GameEngine {
         // Prevent double-tap zoom on the canvas for better mobile gameplay
         this.container.addEventListener('touchstart', e => { if (e.touches.length === 1 && e.cancelable) e.preventDefault(); }, { passive: false });
         this.container.addEventListener('pointerdown', e => this.onClick(e));
+        this.container.addEventListener('pointermove', e => this.onPointerMove(e));
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.rollBtn.addEventListener('click', () => this.rollDice());
         this.backToMenuBtn.addEventListener('click', () => this.showLandingPage());
@@ -979,19 +980,7 @@ class GameEngine {
         track.push({ c: -7, r: 0 });                                  // Cross left edge
         for (let c = -7; c <= -2; c++) track.push({ c: c, r: -1 });   // Right top side of LEFT arm
 
-        // Draw small debug spheres on the perimeter track
-        track.forEach((pos, i) => {
-            const geom = new THREE.SphereGeometry(cell * 0.15, 8, 8);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const m = new THREE.Mesh(geom, mat);
-            // Every 13th step represents roughly the start of a new quadrant, let's make it yellow to differentiate
-            if (i % 13 === 0) mat.color.setHex(0xffaa00);
-
-            m.position.set(center.x + pos.c * cell, topY + 0.05, center.z + pos.r * cell);
-            this.scene.add(m);
-        });
-
-        // Generate and draw the 4 Home Columns (Safe path to center)
+        // Generate the 4 Home Columns (Safe path to center)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
         for (let i = 1; i <= 5; i++) {
             homeColumns.Blue.push({ c: -6 + i, r: 0 });   // Left arm moving right
@@ -999,18 +988,6 @@ class GameEngine {
             homeColumns.Red.push({ c: 0, r: 6 - i });     // Bottom arm moving up
             homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
         }
-
-        // Draw the home columns in their respective colors
-        Object.keys(homeColumns).forEach(playerColor => {
-            const hexColor = colors.find(c => c.name === playerColor).c;
-            homeColumns[playerColor].forEach(pos => {
-                const geom = new THREE.SphereGeometry(cell * 0.2, 8, 8);
-                const mat = new THREE.MeshBasicMaterial({ color: hexColor });
-                const m = new THREE.Mesh(geom, mat);
-                m.position.set(center.x + pos.c * cell, topY + 0.05, center.z + pos.r * cell);
-                this.scene.add(m);
-            });
-        });
 
         this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
         this.setCamera(0, 24, 16, 0, 22, 13);
@@ -1255,7 +1232,27 @@ class GameEngine {
         this.gameStatus.innerText = `${p[idx]}'s turn. Roll the dice!`;
     }
 
-    // ═══════════════════════ CLICK HANDLER ═══════════════════════
+    // ═══════════════════════ CLICK & POINTER HANDLERS ═══════════════════════
+    onPointerMove(e) {
+        if (this.currentGame !== 'ludo' || this.animating || !this.gameState.cell) return;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+
+        if (this.board) {
+            const hits = this.raycaster.intersectObject(this.board, true);
+            if (hits.length > 0) {
+                const pt = hits[0].point;
+                const cell = this.gameState.cell;
+                const center = this.gameState.center;
+                const c = Math.round((pt.x - center.x) / cell);
+                const r = Math.round((pt.z - center.z) / cell);
+                this.gameStatus.innerText = `Map Crosshair => x/c: ${c}, z/r: ${r} | World: (${pt.x.toFixed(2)}, ${pt.z.toFixed(2)})`;
+            }
+        }
+    }
+
     onClick(e) {
         if (this.gameState.gameOver || this.animating) return;
         this._needsRender = true;
