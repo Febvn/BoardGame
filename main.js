@@ -629,13 +629,18 @@ class GameEngine {
                 const center = this.gameState.center || { x: 0, z: 0 };
                 const topY = this.gameState.topY || 0.5;
 
+                // NEW: Precision Raycasting to find ACTUAL SURFACE Y (prevents sinking in center holes)
+                const ray = new THREE.Raycaster(new THREE.Vector3(center.x, 10, center.z), new THREE.Vector3(0, -1, 0));
+                const hits = ray.intersectObject(this.board, true);
+                const surfaceY = (hits.length > 0) ? (hits[0].point.y + 0.01) : topY;
+
                 // placePiece handles shadows and initial surface placement
-                this.activeDice = this.placePiece('dice', center.x, topY, center.z, 0xffffff, scaleBase);
+                this.activeDice = this.placePiece('dice', center.x, surfaceY, center.z, 0xffffff, scaleBase);
 
                 // Calculate and store exact floorY so animation doesn't float/clip
                 this.activeDice.updateMatrixWorld(true);
                 const diceBox = new THREE.Box3().setFromObject(this.activeDice);
-                this.gameState.diceFloorY = topY + (this.activeDice.position.y - diceBox.min.y);
+                this.gameState.diceFloorY = surfaceY + (this.activeDice.position.y - diceBox.min.y);
                 this.activeDice.position.y = this.gameState.diceFloorY;
             }
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
@@ -770,6 +775,7 @@ class GameEngine {
         this.gameStatus.innerText = 'Select your piece, valid moves highlight. Click to move. Capture by landing on opponent.';
         this.board = await load('Boards/Chess/chess-board-brown-white.gltf');
         this.scene.add(this.board);
+        this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const types = ['pawn', 'rock', 'knight', 'bishop', 'queen', 'king'];
         for (const col of ['white', 'black']) for (const t of types) this.models[`chess_${t}_${col}`] = await load(`Pieces/Chess/chess-${t}-${col}.gltf`);
         const { size, center } = this.getBoardMetrics(this.board);
