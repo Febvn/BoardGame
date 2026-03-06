@@ -1671,12 +1671,12 @@ class GameEngine {
         if (!token) return;
 
         // Entry points for each color (track index where they enter the board)
-        const entryIndex = { Blue: 46, Green: 0, Red: 26, Purple: 13 };
+        const entryIndex = { Blue: 46, Green: 0, Red: 33, Purple: 13 };
         // Entry world coords (precise for each color)
         const entryWorld = {
             Blue: { x: -8.47, z: -1.60 },
             Green: { x: -1.36, z: -8.47 },
-            Red: { x: 1.36, z: 8.47 },
+            Red: { x: -1.67, z: 8.35 },
             Purple: { x: 8.47, z: 1.36 }
         };
 
@@ -1707,10 +1707,12 @@ class GameEngine {
 
     advanceLudoTurn() {
         const gs = this.gameState;
+        const rolledSix = this.lastDiceResult === 6;
         gs.rolled = false;
         gs.diceResult = null;
+        this.lastDiceResult = null; // Reset to prevent stale data
         // If rolled 6, same player rolls again
-        if (this.lastDiceResult === 6) {
+        if (rolledSix) {
             this.gameStatus.innerText = `Rolled 6! ${gs.currentPlayer} rolls again.`;
             return;
         }
