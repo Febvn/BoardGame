@@ -636,7 +636,7 @@ class GameEngine {
         const bp = '/assets/gltf';
         const load = async u => (await this.loader.loadAsync(`${bp}/${u}`)).scene;
         this.loadingBar.style.width = '30%';
-        const dg = ['ludo', 'monopoly', 'backgammon', 'chess'];
+        const dg = ['ludo', 'monopoly', 'backgammon'];
         try {
             await this['setup_' + gt](load);
             this.loadingBar.style.width = '80%';
