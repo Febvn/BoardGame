@@ -1013,8 +1013,9 @@ class GameEngine {
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cell = Math.min(size.x, size.z) / 15;
-        const q = 4.5 * cell;
+        const cell = 1.31;
+        const offsetX = 0.415;
+        const offsetZ = -0.595;
         const colors = [
             { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
             { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
@@ -1026,8 +1027,8 @@ class GameEngine {
         colors.forEach(b => {
             const tokens = [];
             b.starts.forEach((pos, i) => {
-                const wx = center.x + pos.c * cell;
-                const wz = center.z + pos.r * cell;
+                const wx = center.x + pos.c * cell + offsetX;
+                const wz = center.z + pos.r * cell + offsetZ;
                 const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
@@ -1059,7 +1060,10 @@ class GameEngine {
             homeColumns.Purple.push({ c: 6 - i, r: 0 });  // Right arm moving left
         }
 
-        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center, track, homeColumns, cell };
+        this.gameState = {
+            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false,
+            topY, center, track, homeColumns, cell, offsetX, offsetZ
+        };
         this.setCamera(0, 24, 16, 0, 22, 13);
         this.updateTurnUI('Blue', '#1d4ed8');
     }
