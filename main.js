@@ -1220,13 +1220,23 @@ class GameEngine {
             this._needsRender = true; // Force render repaint for the animation frame
             if (t < 2.5) requestAnimationFrame(anim);
             else {
-                // Snap to board floor when finished, don't remove it
+                // Snap to board floor when finished
                 dice.position.y = floorY;
-                // Snap rotation randomly so it looks like it landed on a flat face
-                dice.rotation.x = Math.round(dice.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
-                dice.rotation.z = Math.round(dice.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
-                this._needsRender = true;
 
+                // MAP RESULT TO 3D ROTATION (Standard Dice Face Orientation)
+                const h = Math.PI / 2;
+                const rotations = {
+                    1: { x: 0, z: 0 },
+                    6: { x: Math.PI, z: 0 },
+                    2: { x: -h, z: 0 },
+                    5: { x: h, z: 0 },
+                    3: { x: 0, z: h },
+                    4: { x: 0, z: -h }
+                };
+                const rot = rotations[result];
+                dice.rotation.set(rot.x, 0, rot.z);
+
+                this._needsRender = true;
                 this.diceValueDisp.innerText = result;
                 this.isRolling = false;
                 this.onDiceResult(result);
