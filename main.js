@@ -89,15 +89,15 @@ class GameEngine {
         this.controls.minDistance = 2;
         this.controls.maxDistance = 40;
         this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
         sun.position.set(10, 20, 10); sun.castShadow = true;
-        sun.shadow.mapSize.set(1024, 1024);
-        sun.shadow.camera.left = sun.shadow.camera.bottom = -10;
-        sun.shadow.camera.right = sun.shadow.camera.top = 10;
+        sun.shadow.mapSize.set(2048, 2048);
+        sun.shadow.camera.left = sun.shadow.camera.bottom = -15;
+        sun.shadow.camera.right = sun.shadow.camera.top = 15;
         this.scene.add(sun);
-        const fill = new THREE.DirectionalLight(0x818cf8, 0.4);
-        fill.position.set(-5, 5, -10);
+        const fill = new THREE.PointLight(0x6366f1, 0.8);
+        fill.position.set(-10, 10, -10);
         this.scene.add(fill);
         const tableSize = 40;
         const tableThick = 0.5;
@@ -680,17 +680,26 @@ class GameEngine {
     getBoardMetrics(b) { b.updateMatrixWorld(true); const box = new THREE.Box3().setFromObject(b); return { size: box.getSize(new THREE.Vector3()), center: box.getCenter(new THREE.Vector3()) }; }
 
     placePiece(key, x, y, z, color, scale = 0.3, rotY = 0) {
-        const p = this.models[key].clone();
-        p.scale.set(scale, scale, scale);
-        if (rotY) p.rotation.y = rotY;
-        p.updateMatrixWorld(true);
-        const box = new THREE.Box3().setFromObject(p);
-        const c = box.getCenter(new THREE.Vector3());
-        const bot = box.min.y;
-        p.position.set(x - (c.x - p.position.x), y - (bot - p.position.y), z - (c.z - p.position.z));
-        p.traverse(ch => { if (ch.isMesh) { ch.castShadow = true; ch.material = ch.material.clone(); ch.material.color.set(color); } });
-        this.piecesGroup.add(p);
-        return p;
+        const m = this.models[key].clone();
+        m.position.set(x, y, z);
+        m.scale.set(scale, scale, scale);
+        m.rotation.y = rotY;
+        m.traverse(node => {
+            if (node.isMesh) {
+                node.castShadow = node.receiveShadow = true;
+                node.material = new THREE.MeshPhysicalMaterial({
+                    color: color,
+                    metalness: 0.1,
+                    roughness: 0.1,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.1,
+                    transmission: 0.05,
+                    thickness: 0.5
+                });
+            }
+        });
+        this.piecesGroup.add(m);
+        return { mesh: m, key };
     }
 
     updateTurnUI(player, color) {
@@ -1014,16 +1023,16 @@ class GameEngine {
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
         const cellBase = Math.min(size.x, size.z) / 15; // Locked scaling strictly for home bases
-        const cell = Math.min(size.x, size.z) / 7.5;     // Extra wide padding for short-arm track
+        const cell = Math.min(size.x, size.z) / 11;     // Spacing for 11x11 Mini Ludo (4-cell arms)
         const offsetX = 0.0;
         const offsetZ = 0.0;
         // --- BASE POSITIONS ---
-        // Shifted inward to fit the new 3-cell arm length
+        // Center of 4x4 corners for 11x11 grid
         const colors = [
-            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -3.5, r: -3.5 }, { c: -2.5, r: -3.5 }, { c: -3.5, r: -2.5 }, { c: -2.5, r: -2.5 }] },
-            { c: 0x15803d, name: 'Green', starts: [{ c: 2.5, r: -3.5 }, { c: 3.5, r: -3.5 }, { c: 2.5, r: -2.5 }, { c: 3.5, r: -2.5 }] },
-            { c: 0xb91c1c, name: 'Red', starts: [{ c: -3.5, r: 2.5 }, { c: -2.5, r: 2.5 }, { c: -3.5, r: 3.5 }, { c: -2.5, r: 3.5 }] },
-            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 2.5, r: 2.5 }, { c: 3.5, r: 2.5 }, { c: 2.5, r: 3.5 }, { c: 3.5, r: 3.5 }] }
+            { c: 0x2563eb, name: 'Blue', starts: [{ c: -3.5, r: -3.5 }, { c: -2.5, r: -3.5 }, { c: -3.5, r: -2.5 }, { c: -2.5, r: -2.5 }] },
+            { c: 0x10b981, name: 'Green', starts: [{ c: 2.5, r: -3.5 }, { c: 3.5, r: -3.5 }, { c: 2.5, r: -2.5 }, { c: 3.5, r: -2.5 }] },
+            { c: 0xef4444, name: 'Red', starts: [{ c: -3.5, r: 2.5 }, { c: -2.5, r: 2.5 }, { c: -3.5, r: 3.5 }, { c: -2.5, r: 3.5 }] },
+            { c: 0x8b5cf6, name: 'Purple', starts: [{ c: 2.5, r: 2.5 }, { c: 3.5, r: 2.5 }, { c: 2.5, r: 3.5 }, { c: 3.5, r: 3.5 }] }
         ];
 
         const players = {};
@@ -1032,7 +1041,7 @@ class GameEngine {
             b.starts.forEach((pos, i) => {
                 const wx = center.x + pos.c * cellBase;
                 const wz = center.z + pos.r * cellBase;
-                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.4); // Smaller token = more visual padding
+                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({
                     mesh, inBase: true, trackPos: -1, homeX: wx, homeZ: wz,
                     stepsTraveled: 0, inHome: false, homePos: -1, finished: false,
@@ -1043,40 +1052,39 @@ class GameEngine {
         });
 
         // --- PATH MAPPING & VISUALIZATION ---
-        // Ludo 24-cell track (arms extend ±3, NO duplicate cells)
-        // Each arm: 3 outward + 1 tip + 2 return = 6 cells, 6 x 4 = 24
+        // Ludo 32-cell track (Arm Length 4, Center 3)
+        // Each arm: 4 outward + 1 tip + 3 return = 8 cells, 8 x 4 = 32
         const track = [];
 
         // Green arm (TOP)
-        for (let r = -1; r >= -3; r--) track.push({ c: -1, r: r });   // 0, 1, 2
-        track.push({ c: 0, r: -3 });                                  // 3 (tip)
-        for (let r = -3; r <= -2; r++) track.push({ c: 1, r: r });    // 4, 5
+        for (let r = -1; r >= -4; r--) track.push({ c: -1, r: r });   // 0,1,2,3
+        track.push({ c: 0, r: -4 });                                  // 4 (tip)
+        for (let r = -4; r <= -2; r++) track.push({ c: 1, r: r });    // 5,6,7
 
         // Purple arm (RIGHT)
-        for (let c = 1; c <= 3; c++) track.push({ c: c, r: -1 });     // 6, 7, 8
-        track.push({ c: 3, r: 0 });                                   // 9 (tip)
-        for (let c = 3; c >= 2; c--) track.push({ c: c, r: 1 });      // 10, 11
+        for (let c = 1; c <= 4; c++) track.push({ c: c, r: -1 });     // 8..11
+        track.push({ c: 4, r: 0 });                                   // 12
+        for (let c = 4; c >= 2; c--) track.push({ c: c, r: 1 });      // 13..15
 
         // Red arm (BOTTOM)
-        for (let r = 1; r <= 3; r++) track.push({ c: 1, r: r });      // 12, 13, 14
-        track.push({ c: 0, r: 3 });                                   // 15 (tip)
-        for (let r = 3; r >= 2; r--) track.push({ c: -1, r: r });     // 16, 17
+        for (let r = 1; r <= 4; r++) track.push({ c: 1, r: r });      // 16..19
+        track.push({ c: 0, r: 4 });                                   // 20
+        for (let r = 4; r >= 2; r--) track.push({ c: -1, r: r });     // 21..23
 
         // Blue arm (LEFT)
-        for (let c = -1; c >= -3; c--) track.push({ c: c, r: 1 });    // 18, 19, 20
-        track.push({ c: -3, r: 0 });                                  // 21 (tip)
-        for (let c = -3; c <= -2; c++) track.push({ c: c, r: -1 });   // 22, 23
+        for (let c = -1; c >= -4; c--) track.push({ c: c, r: 1 });    // 24..27
+        track.push({ c: -4, r: 0 });                                  // 28
+        for (let c = -4; c <= -2; c++) track.push({ c: c, r: -1 });   // 29..31
 
-        // Home Columns (3 cells each toward center)
+        // Home Columns (4 cells each toward center)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 3; i++) homeColumns.Green.push({ c: 0, r: -4 + i });   // r: -3, -2, -1
-        for (let i = 1; i <= 3; i++) homeColumns.Purple.push({ c: 4 - i, r: 0 });   // c: 3, 2, 1
-        for (let i = 1; i <= 3; i++) homeColumns.Red.push({ c: 0, r: 4 - i });      // r: 3, 2, 1
-        for (let i = 1; i <= 3; i++) homeColumns.Blue.push({ c: -4 + i, r: 0 });    // c: -3, -2, -1
+        for (let i = 1; i <= 4; i++) homeColumns.Green.push({ c: 0, r: -5 + i });   // r: -4 to -1
+        for (let i = 1; i <= 4; i++) homeColumns.Purple.push({ c: 5 - i, r: 0 });   // c: 4 to 1
+        for (let i = 1; i <= 4; i++) homeColumns.Red.push({ c: 0, r: 5 - i });      // r: 4 to 1
+        for (let i = 1; i <= 4; i++) homeColumns.Blue.push({ c: -5 + i, r: 0 });    // c: -4 to -1
 
         this.gameState = {
-            currentPlayer: 'Blue', gameOver: false, players,
-            diceResult: null, rolled: false, captureBonus: false,
+            currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, captureBonus: false,
             topY, center, track, homeColumns, cell, offsetX, offsetZ
         };
         this.setCamera(0, 24, 16, 0, 22, 13);
@@ -1330,7 +1338,7 @@ class GameEngine {
             const canMove = player.tokens.some(t => {
                 if (t.finished) return false;
                 if (t.inBase) return val === 6;
-                if (t.inHome) return t.homePos + val <= 3;
+                if (t.inHome) return t.homePos + val <= 4;
                 return true;
             });
             if (!canMove) {
@@ -1712,7 +1720,7 @@ class GameEngine {
         const token = player.tokens.find(t => t.mesh === clickedMesh);
         if (!token || token.finished) return;
 
-        const entryIndex = { Green: 0, Purple: 6, Red: 12, Blue: 18 };
+        const entryIndex = { Green: 0, Purple: 8, Red: 16, Blue: 24 };
         const dice = gs.diceResult;
 
         if (token.inBase && dice === 6) {
@@ -1732,10 +1740,10 @@ class GameEngine {
             const newSteps = oldSteps + dice;
 
             if (token.inHome) {
-                if (newSteps > 3) return; // Exact roll to finish
+                if (newSteps > 4) return; // Exact roll to finish
                 token.homePos = newSteps;
                 token.stepsTraveled = newSteps;
-                if (newSteps === 3) {
+                if (newSteps === 4) {
                     token.finished = true;
                     this.animateMove(token.mesh, gs.center.x, gs.topY + 0.8, gs.center.z, () => {
                         token.mesh.visible = false;
@@ -1754,11 +1762,11 @@ class GameEngine {
                 }
             } else {
                 // Moving on track
-                if (newSteps >= 24) {
-                    const hIdx = newSteps - 24;
-                    if (hIdx > 3) return;
+                if (newSteps >= 32) {
+                    const hIdx = newSteps - 32;
+                    if (hIdx > 4) return;
                     token.trackPos = -1;
-                    if (hIdx === 3) {
+                    if (hIdx === 4) {
                         token.finished = true;
                         this.animateMove(token.mesh, gs.center.x, gs.topY + 0.8, gs.center.z, () => {
                             token.mesh.visible = false;
@@ -1779,7 +1787,7 @@ class GameEngine {
                         });
                     }
                 } else {
-                    token.trackPos = (token.trackPos + dice) % 24;
+                    token.trackPos = (token.trackPos + dice) % 32;
                     token.stepsTraveled = newSteps;
                     const dest = gs.track[token.trackPos];
                     const wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
