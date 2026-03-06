@@ -642,17 +642,12 @@ class GameEngine {
                 }
                 const surfaceY = (maxY !== -Infinity) ? (maxY + 0.05) : (topY + 0.05); // Added 0.05 elevation buffer
 
-                // placePiece handles shadows and initial surface placement
+                // placePiece already aligns the BOTTOM of the dice mesh to surfaceY
                 this.activeDice = this.placePiece('dice', center.x, surfaceY, center.z, 0xffffff, scaleBase);
 
-                // Store initial default state for return animation
-                this.gameState.diceHomePos = new THREE.Vector3(center.x, 0, center.z);
-                this.activeDice.updateMatrixWorld(true);
-                const diceBox = new THREE.Box3().setFromObject(this.activeDice);
-                this.gameState.diceFloorY = surfaceY + (this.activeDice.position.y - diceBox.min.y);
-                this.gameState.diceHomePos.y = this.gameState.diceFloorY;
-
-                this.activeDice.position.copy(this.gameState.diceHomePos);
+                // Use the position placePiece calculated directly — it's already correct
+                this.gameState.diceFloorY = this.activeDice.position.y;
+                this.gameState.diceHomePos = this.activeDice.position.clone();
             }
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
 
