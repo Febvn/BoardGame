@@ -1691,12 +1691,11 @@ class GameEngine {
 
         // Entry points for each color (track index where they enter the board)
         const entryIndex = { Blue: 47, Green: 8, Red: 34, Purple: 21 };
-        // Entry world coords (precise for each color)
         const entryWorld = {
             Blue: { x: -8.47, z: -1.60 },
             Green: { x: 1.67, z: -8.35 },
             Red: { x: -1.77, z: 8.47 },
-            Purple: { x: 8.46, z: 1.80 }
+            Purple: { x: 8.58, z: 2.15 }
         };
 
         if (token.inBase && gs.diceResult === 6) {
