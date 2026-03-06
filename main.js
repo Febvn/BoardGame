@@ -941,14 +941,17 @@ class GameEngine {
         this.models.token = await load('Pieces/Token/token-v1-white.gltf');
         this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
-        const q = Math.min(size.x, size.z) * 0.28, topY = center.y + size.y / 2 + 0.02;
+        const cell = Math.min(size.x, size.z) / 15;
+        const q = 4.5 * cell; // Distance from board center to base center
+        const topY = center.y + size.y / 2 + 0.02;
+
         const colors = [
-            { c: 0xff3131, name: 'Red', ox: -q, oz: -q },    // Top Left
-            { c: 0x00ff88, name: 'Green', ox: q, oz: -q },   // Top Right
-            { c: 0x00d8ff, name: 'Blue', ox: -q, oz: q },    // Bottom Left
-            { c: 0xffd700, name: 'Yellow', ox: q, oz: q }    // Bottom Right
+            { c: 0x1d4ed8, name: 'Blue', ox: -q, oz: -q },     // Top Left
+            { c: 0x15803d, name: 'Green', ox: q, oz: -q },    // Top Right
+            { c: 0xb91c1c, name: 'Red', ox: -q, oz: q },      // Bottom Left
+            { c: 0x6d28d9, name: 'Purple', ox: q, oz: q }     // Bottom Right
         ];
-        const spread = q * 0.3;
+        const spread = 1.5 * cell; // Distance from base center to the 4 inner squares
         const players = {};
         colors.forEach(b => {
             const tokens = [];
@@ -959,9 +962,9 @@ class GameEngine {
             });
             players[b.name] = { tokens, color: b.c };
         });
-        this.gameState = { currentPlayer: 'Red', gameOver: false, players, diceResult: null, rolled: false, topY, center };
+        this.gameState = { currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, topY, center };
         this.setCamera(0, 24, 16, 0, 22, 13);
-        this.updateTurnUI('Red', '#ff3131');
+        this.updateTurnUI('Blue', '#1d4ed8');
     }
 
     // ═══════════════════════ MONOPOLY ═══════════════════════
@@ -1194,7 +1197,7 @@ class GameEngine {
     }
 
     advanceLudoTurn() {
-        const p = ['Red', 'Green', 'Yellow', 'Blue'], c = ['#ff3131', '#00ff88', '#ffd700', '#00d8ff'];
+        const p = ['Blue', 'Green', 'Purple', 'Red'], c = ['#1d4ed8', '#15803d', '#6d28d9', '#b91c1c'];
         const gs = this.gameState;
         const idx = (p.indexOf(gs.currentPlayer) + 1) % 4;
         gs.currentPlayer = p[idx]; gs.rolled = false; gs.diceResult = null;
