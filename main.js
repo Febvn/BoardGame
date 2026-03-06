@@ -959,7 +959,7 @@ class GameEngine {
             b.starts.forEach((pos, i) => {
                 const wx = center.x + pos.c * cell;
                 const wz = center.z + pos.r * cell;
-                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.45);
+                const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
                 tokens.push({ mesh, inBase: true, pos: -1, homeX: wx, homeZ: wz });
             });
             players[b.name] = { tokens, color: b.c };
