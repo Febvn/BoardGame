@@ -947,10 +947,10 @@ class GameEngine {
         const q = 4.5 * cell; // Distance from board center to base center
         const topY = center.y + size.y / 2 + 0.02;
         const colors = [
-            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6, r: -6 }, { c: -5, r: -6 }, { c: -6, r: -5 }, { c: -5, r: -5 }] },
-            { c: 0x15803d, name: 'Green', starts: [{ c: 5, r: -6 }, { c: 6, r: -6 }, { c: 5, r: -5 }, { c: 6, r: -5 }] },
-            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6, r: 5 }, { c: -5, r: 5 }, { c: -6, r: 6 }, { c: -5, r: 6 }] },
-            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5, r: 5 }, { c: 6, r: 5 }, { c: 5, r: 6 }, { c: 6, r: 6 }] }
+            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
+            { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
+            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6.30, r: 5.02 }, { c: -5.02, r: 5.02 }, { c: -6.30, r: 6.30 }, { c: -5.02, r: 6.30 }] },
+            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5.02, r: 5.02 }, { c: 6.30, r: 5.02 }, { c: 5.02, r: 6.30 }, { c: 6.30, r: 6.30 }] }
         ];
 
         const players = {};
