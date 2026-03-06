@@ -610,18 +610,33 @@ class GameEngine {
         if (this.piecesGroup) this.scene.remove(this.piecesGroup);
         if (this.hitboxes) this.hitboxes.forEach(h => this.scene.remove(h));
         if (this.highlights) this.highlights.forEach(h => this.scene.remove(h));
+        if (this.activeDice) { this.scene.remove(this.activeDice); this.activeDice = null; }
         this.piecesGroup = new THREE.Group(); this.scene.add(this.piecesGroup);
         this.hitboxes = []; this.highlights = [];
         this.gameState = { gameOver: false }; this.models = {}; this.animating = false;
         const bp = '/assets/gltf';
         const load = async u => (await this.loader.loadAsync(`${bp}/${u}`)).scene;
         this.loadingBar.style.width = '30%';
+        const dg = ['ludo', 'monopoly', 'backgammon'];
         try {
             await this['setup_' + gt](load);
             this.loadingBar.style.width = '80%';
             if (this.board) this.board.traverse(c => { if (c.isMesh) { c.receiveShadow = true; c.castShadow = false; } });
+
+            // Setup persistent dice object that sits on the board
+            if (dg.includes(gt) && this.models.dice) {
+                this.activeDice = this.models.dice.clone();
+                const center = this.gameState.center || { x: 0, z: 0 };
+                const topY = this.gameState.topY || 0.5;
+                // Shrinking the ludo dice size per request
+                const scaleBase = gt === 'ludo' ? 1.0 : 0.8;
+                this.activeDice.scale.set(scaleBase, scaleBase, scaleBase);
+                const floorY = topY + (scaleBase * 0.5);
+                this.activeDice.position.set(center.x, floorY, center.z);
+                this.scene.add(this.activeDice);
+            }
         } catch (err) { console.error('Load Error:', err); this.gameStatus.innerText = 'Error: ' + err.message; }
-        const dg = ['ludo', 'monopoly', 'backgammon'];
+
         this.rollBtn.classList.toggle('hidden', !dg.includes(gt));
         if (!dg.includes(gt)) this.diceResultUI.classList.add('hidden');
         this.loadingBar.style.width = '100%';
@@ -1164,23 +1179,22 @@ class GameEngine {
 
     // ═══════════════════════ DICE ROLL ═══════════════════════
     async rollDice() {
-        if (this.isRolling || this.animating) return;
+        if (this.isRolling || this.animating || !this.activeDice) return;
         this.isRolling = true;
         this.diceResultUI.classList.remove('hidden');
         this.diceValueDisp.innerText = '...';
-        const dice = this.models.dice.clone();
 
+        const dice = this.activeDice;
         const center = this.gameState.center || { x: 0, z: 0 };
         const topY = this.gameState.topY || 0.5;
 
         // Make the dice bigger depending on the game so it's clearly visible in the middle
-        const scaleBase = this.currentGame === 'ludo' ? 1.8 : 0.8;
-        dice.scale.set(scaleBase, scaleBase, scaleBase);
+        const scaleBase = this.currentGame === 'ludo' ? 1.0 : 0.8;
 
         // Prevent glitching: Ensure the dice origin (center) rests exactly on top of the board, not inside it
         const floorY = topY + (scaleBase * 0.5);
         dice.position.set(center.x, floorY + 5, center.z);
-
+        // Explicitly ensuring it is in the scene, though it should be already
         this.scene.add(dice);
 
         const result = Math.floor(Math.random() * 6) + 1;
@@ -1193,8 +1207,13 @@ class GameEngine {
             this._needsRender = true; // Force render repaint for the animation frame
             if (t < 2.5) requestAnimationFrame(anim);
             else {
-                this.scene.remove(dice);
+                // Snap to board floor when finished, don't remove it
+                dice.position.y = floorY;
+                // Snap rotation randomly so it looks like it landed on a flat face
+                dice.rotation.x = Math.round(dice.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+                dice.rotation.z = Math.round(dice.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
                 this._needsRender = true;
+
                 this.diceValueDisp.innerText = result;
                 this.isRolling = false;
                 this.onDiceResult(result);
