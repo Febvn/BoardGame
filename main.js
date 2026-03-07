@@ -1012,33 +1012,36 @@ class GameEngine {
         this.models.dice = await load('Dices/dice-v1-white-black.gltf');
         const { size, center } = this.getBoardMetrics(this.board);
 
-        // FIND MAXIMUM BOARD SURFACE around center (Collision prevention)
+        // FIND MAXIMUM BOARD SURFACE
         let maxY = -Infinity;
         const offset = Math.min(size.x, size.z) * 0.1;
-        const pts = [[0, 0], [offset, offset], [-offset, -offset], [offset, -offset], [-offset, offset]];
-        for (const [ox, oz] of pts) {
+        const scanPts = [[0, 0], [offset, offset], [-offset, -offset], [offset, -offset], [-offset, offset]];
+        for (const [ox, oz] of scanPts) {
             const r = new THREE.Raycaster(new THREE.Vector3(center.x + ox, 10, center.z + oz), new THREE.Vector3(0, -1, 0));
             const h = r.intersectObject(this.board, true);
             if (h.length > 0 && h[0].point.y > maxY) maxY = h[0].point.y;
         }
         const topY = (maxY !== -Infinity) ? (maxY + 0.01) : (center.y + size.y / 2 + 0.02);
-        const cellBase = Math.min(size.x, size.z) / 15; // Locked scaling strictly for home bases
-        const cell = Math.min(size.x, size.z) / 11;     // Spacing for 11x11 Mini Ludo (4-cell arms)
+
+        // CONFIGURATION: 11x11 Grid (4 arm + 3 center + 4 arm)
+        // Middle is 3x3 = 9 squares. Arms are 3 wide x 4 long = 12 squares.
+        const cellBase = Math.min(size.x, size.z) / 15; // Locked for base positions
+        const cell = Math.min(size.x, size.z) / 11;     // Movement grid
         const offsetX = 0.0;
         const offsetZ = 0.0;
-        // --- BASE POSITIONS ---
-        // Center of 4x4 corners for 11x11 grid
+
+        // --- BASE POSITIONS (LOCKED BY USER - DO NOT CHANGE) ---
         const colors = [
-            { c: 0x2563eb, name: 'Blue', starts: [{ c: -3.5, r: -3.5 }, { c: -2.5, r: -3.5 }, { c: -3.5, r: -2.5 }, { c: -2.5, r: -2.5 }] },
-            { c: 0x10b981, name: 'Green', starts: [{ c: 2.5, r: -3.5 }, { c: 3.5, r: -3.5 }, { c: 2.5, r: -2.5 }, { c: 3.5, r: -2.5 }] },
-            { c: 0xef4444, name: 'Red', starts: [{ c: -3.5, r: 2.5 }, { c: -2.5, r: 2.5 }, { c: -3.5, r: 3.5 }, { c: -2.5, r: 3.5 }] },
-            { c: 0x8b5cf6, name: 'Purple', starts: [{ c: 2.5, r: 2.5 }, { c: 3.5, r: 2.5 }, { c: 2.5, r: 3.5 }, { c: 3.5, r: 3.5 }] }
+            { c: 0x1d4ed8, name: 'Blue', starts: [{ c: -6.30, r: -6.30 }, { c: -5.02, r: -6.30 }, { c: -6.30, r: -5.02 }, { c: -5.02, r: -5.02 }] },
+            { c: 0x15803d, name: 'Green', starts: [{ c: 5.02, r: -6.30 }, { c: 6.30, r: -6.30 }, { c: 5.02, r: -5.02 }, { c: 6.30, r: -5.02 }] },
+            { c: 0xb91c1c, name: 'Red', starts: [{ c: -6.30, r: 5.02 }, { c: -5.02, r: 5.02 }, { c: -6.30, r: 6.30 }, { c: -5.02, r: 6.30 }] },
+            { c: 0x6d28d9, name: 'Purple', starts: [{ c: 5.02, r: 5.02 }, { c: 6.30, r: 5.02 }, { c: 5.02, r: 6.30 }, { c: 6.30, r: 6.30 }] }
         ];
 
         const players = {};
         colors.forEach(b => {
             const tokens = [];
-            b.starts.forEach((pos, i) => {
+            b.starts.forEach((pos) => {
                 const wx = center.x + pos.c * cellBase;
                 const wz = center.z + pos.r * cellBase;
                 const mesh = this.placePiece('token', wx, topY, wz, b.c, 0.6);
@@ -1051,37 +1054,36 @@ class GameEngine {
             players[b.name] = { tokens, color: b.c };
         });
 
-        // --- PATH MAPPING & VISUALIZATION ---
-        // Ludo 32-cell track (Arm Length 4, Center 3)
-        // Each arm: 4 outward + 1 tip + 3 return = 8 cells, 8 x 4 = 32
+        // --- PATH MAPPING (11x11 Movement Track, arm reach of 4) ---
+        // Indices: Center = [-1, 1], Arms = [2, 5] and [-5, -2]
         const track = [];
 
-        // Green arm (TOP)
-        for (let r = -1; r >= -4; r--) track.push({ c: -1, r: r });   // 0,1,2,3
-        track.push({ c: 0, r: -4 });                                  // 4 (tip)
-        for (let r = -4; r <= -2; r++) track.push({ c: 1, r: r });    // 5,6,7
+        // Green arm (TOP) - Start from row -2 to -5
+        for (let r = -2; r >= -5; r--) track.push({ c: -1, r: r });
+        track.push({ c: 0, r: -5 });
+        for (let r = -5; r <= -2; r++) track.push({ c: 1, r: r });
 
         // Purple arm (RIGHT)
-        for (let c = 1; c <= 4; c++) track.push({ c: c, r: -1 });     // 8..11
-        track.push({ c: 4, r: 0 });                                   // 12
-        for (let c = 4; c >= 2; c--) track.push({ c: c, r: 1 });      // 13..15
+        for (let c = 2; c <= 5; c++) track.push({ c: c, r: -1 });
+        track.push({ c: 5, r: 0 });
+        for (let c = 5; c >= 2; c--) track.push({ c: c, r: 1 });
 
         // Red arm (BOTTOM)
-        for (let r = 1; r <= 4; r++) track.push({ c: 1, r: r });      // 16..19
-        track.push({ c: 0, r: 4 });                                   // 20
-        for (let r = 4; r >= 2; r--) track.push({ c: -1, r: r });     // 21..23
+        for (let r = 2; r <= 5; r++) track.push({ c: 1, r: r });
+        track.push({ c: 0, r: 5 });
+        for (let r = 5; r >= 2; r--) track.push({ c: -1, r: r });
 
         // Blue arm (LEFT)
-        for (let c = -1; c >= -4; c--) track.push({ c: c, r: 1 });    // 24..27
-        track.push({ c: -4, r: 0 });                                  // 28
-        for (let c = -4; c <= -2; c++) track.push({ c: c, r: -1 });   // 29..31
+        for (let c = -2; c >= -5; c--) track.push({ c: c, r: 1 });
+        track.push({ c: -5, r: 0 });
+        for (let c = -5; c <= -2; c++) track.push({ c: c, r: -1 });
 
-        // Home Columns (4 cells each toward center)
+        // Home Columns (4 cells each for 11x11 board)
         const homeColumns = { Blue: [], Green: [], Red: [], Purple: [] };
-        for (let i = 1; i <= 4; i++) homeColumns.Green.push({ c: 0, r: -5 + i });   // r: -4 to -1
-        for (let i = 1; i <= 4; i++) homeColumns.Purple.push({ c: 5 - i, r: 0 });   // c: 4 to 1
-        for (let i = 1; i <= 4; i++) homeColumns.Red.push({ c: 0, r: 5 - i });      // r: 4 to 1
-        for (let i = 1; i <= 4; i++) homeColumns.Blue.push({ c: -5 + i, r: 0 });    // c: -4 to -1
+        for (let i = 5; i >= 2; i--) homeColumns.Green.push({ c: 0, r: -i });
+        for (let i = 5; i >= 2; i--) homeColumns.Purple.push({ c: i, r: 0 });
+        for (let i = 5; i >= 2; i--) homeColumns.Red.push({ c: 0, r: i });
+        for (let i = 5; i >= 2; i--) homeColumns.Blue.push({ c: -i, r: 0 });
 
         this.gameState = {
             currentPlayer: 'Blue', gameOver: false, players, diceResult: null, rolled: false, captureBonus: false,
@@ -1941,10 +1943,10 @@ class GameEngine {
 
         // Visualize all 24 perimeter cells (Short-arm layout)
         const pts = [];
-        const r = gs.cell * 0.25; // Much thinner boxes to emphasize empty space (padding)
+        const r = gs.cell * 0.33; // Slightly larger boxes but with a spread grid, the gap will feel wider
         const y = gs.topY + 0.1;
 
-        // Visualize all 48 perimeter cells (Ludo 4-arm track)
+        // Visualize all 48 perimeter steps
         gs.track.forEach((dest, i) => {
             let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
             let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
@@ -1956,9 +1958,10 @@ class GameEngine {
                 new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
             );
         });
+
         // Visualize Home Columns
-        Object.keys(gs.homeColumns).forEach(color => {
-            gs.homeColumns[color].forEach(dest => {
+        Object.values(gs.homeColumns).forEach(col => {
+            col.forEach(dest => {
                 let wx = gs.center.x + dest.c * gs.cell + (gs.offsetX || 0);
                 let wz = gs.center.z + dest.r * gs.cell + (gs.offsetZ || 0);
                 pts.push(
@@ -1969,6 +1972,20 @@ class GameEngine {
                 );
             });
         });
+
+        // Visualize 3x3 Center (9 squares)
+        for (let r_idx = -1; r_idx <= 1; r_idx++) {
+            for (let c_idx = -1; c_idx <= 1; c_idx++) {
+                let wx = gs.center.x + c_idx * gs.cell + (gs.offsetX || 0);
+                let wz = gs.center.z + r_idx * gs.cell + (gs.offsetZ || 0);
+                pts.push(
+                    new THREE.Vector3(wx - r, y, wz - r), new THREE.Vector3(wx + r, y, wz - r),
+                    new THREE.Vector3(wx + r, y, wz - r), new THREE.Vector3(wx + r, y, wz + r),
+                    new THREE.Vector3(wx + r, y, wz + r), new THREE.Vector3(wx - r, y, wz + r),
+                    new THREE.Vector3(wx - r, y, wz + r), new THREE.Vector3(wx - r, y, wz - r)
+                );
+            }
+        }
 
         this.debugGrid.geometry.setFromPoints(pts);
 
