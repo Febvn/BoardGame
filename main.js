@@ -680,26 +680,17 @@ class GameEngine {
     getBoardMetrics(b) { b.updateMatrixWorld(true); const box = new THREE.Box3().setFromObject(b); return { size: box.getSize(new THREE.Vector3()), center: box.getCenter(new THREE.Vector3()) }; }
 
     placePiece(key, x, y, z, color, scale = 0.3, rotY = 0) {
-        const m = this.models[key].clone();
-        m.position.set(x, y, z);
-        m.scale.set(scale, scale, scale);
-        m.rotation.y = rotY;
-        m.traverse(node => {
-            if (node.isMesh) {
-                node.castShadow = node.receiveShadow = true;
-                node.material = new THREE.MeshPhysicalMaterial({
-                    color: color,
-                    metalness: 0.1,
-                    roughness: 0.1,
-                    clearcoat: 1.0,
-                    clearcoatRoughness: 0.1,
-                    transmission: 0.05,
-                    thickness: 0.5
-                });
-            }
-        });
-        this.piecesGroup.add(m);
-        return { mesh: m, key };
+        const p = this.models[key].clone();
+        p.scale.set(scale, scale, scale);
+        if (rotY) p.rotation.y = rotY;
+        p.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(p);
+        const c = box.getCenter(new THREE.Vector3());
+        const bot = box.min.y;
+        p.position.set(x - (c.x - p.position.x), y - (bot - p.position.y), z - (c.z - p.position.z));
+        p.traverse(ch => { if (ch.isMesh) { ch.castShadow = true; ch.material = ch.material.clone(); ch.material.color.set(color); } });
+        this.piecesGroup.add(p);
+        return p;
     }
 
     updateTurnUI(player, color) {
